@@ -1,7 +1,12 @@
 package domain
 
 import (
+	"errors"
 	"time"
+)
+
+var (
+	ErrAccountNotFound = errors.New("account not found")
 )
 
 // Account represents a user account inside the system.
