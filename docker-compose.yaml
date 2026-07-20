@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: account_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d account_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  account:
+    build: .
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/account_db?sslmode=disable
+      PORT: "8080"
+      ENVIRONMENT: production
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

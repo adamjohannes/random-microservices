@@ -1,0 +1,6 @@
+# Ignore everything, then re-include only what the build needs.
+*
+!go.mod
+!go.sum
+!cmd
+!internal
