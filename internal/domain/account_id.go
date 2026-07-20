@@ -28,3 +28,7 @@ func BuildAccountID(value string) (AccountID, error) {
 func NewAccountID() AccountID {
 	return AccountID{value: uuid.NewString()}
 }
+
+func (a AccountID) String() string {
+	return a.value
+}
