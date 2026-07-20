@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrAccountNotFound = errors.New("account not found")
+	ErrEmailTaken      = errors.New("email is already in use")
 )
 
 // Account represents a user account inside the system.
