@@ -2,8 +2,8 @@ package domain
 
 import (
 	"errors"
-	"regexp"
 	"strings"
+	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -11,7 +11,6 @@ import (
 var (
 	ErrPasswordTooShort = errors.New("password must be at least 8 characters long")
 	ErrPasswordTooWeak  = errors.New("password must contain at least one upper and lower case characters, a special character and a number")
-	passwordRegex       = regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$`)
 )
 
 // Password is a Value Object for password creation and validation.
@@ -25,7 +24,7 @@ func NewPassword(plainText string) (Password, error) {
 	if len(plainText) < 8 {
 		return Password{}, ErrPasswordTooShort
 	}
-	if !passwordRegex.MatchString(plainText) {
+	if !isPasswordStrong(plainText) {
 		return Password{}, ErrPasswordTooWeak
 	}
 
@@ -35,6 +34,25 @@ func NewPassword(plainText string) (Password, error) {
 	}
 
 	return Password{hash: string(hashBytes)}, nil
+}
+
+func isPasswordStrong(s string) bool {
+	var hasLower, hasUpper, hasNumber, hasSpecial bool
+
+	for _, char := range s {
+		switch {
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+
+	return hasLower && hasUpper && hasNumber && hasSpecial
 }
 
 // LoadPassword rehydrates the value object from the database without re-hashing it.
