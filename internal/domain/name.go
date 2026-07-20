@@ -9,7 +9,7 @@ import (
 var (
 	ErrInvalidNameLenght    = errors.New("name must be between 2 and 50 characters")
 	ErrInvalidNameCharacter = errors.New("name must contain only alphabetical characters")
-	nameRegex               = regexp.MustCompile(`^[a-zA-Z]+`)
+	nameRegex               = regexp.MustCompile(`^[a-zA-Z\s]+$`)
 )
 
 // Name is a Value Object for name creation and validation.
