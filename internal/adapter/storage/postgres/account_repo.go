@@ -81,6 +81,27 @@ func (r *AccountRepository) GetByID(ctx context.Context, id domain.AccountID) (*
 	return toDomainModel(dbModel)
 }
 
+// GetByEmail returns an Account entry from the database by e-mail address.
+func (r *AccountRepository) GetByEmail(ctx context.Context, address string) (*domain.Account, error) {
+	var dbModel accountDBModel
+
+	err := r.db.WithContext(ctx).First(&dbModel, "email = ?", address).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, domain.ErrAccountNotFound
+		}
+		return nil, err
+	}
+
+	return toDomainModel(dbModel)
+}
+
+// Update saves modifications to an existing Account.
+func (r *AccountRepository) Update(ctx context.Context, account *domain.Account) error {
+	dbModel := toDBModel(account)
+	return r.db.WithContext(ctx).Save(&dbModel).Error
+}
+
 // SoftDelete marks an account as deleted. Doesn't actually remove any entries from the database.
 func (r *AccountRepository) SoftDelete(ctx context.Context, id domain.AccountID) error {
 	return r.db.WithContext(ctx).Delete(&accountDBModel{}, "id = ?", id.String()).Error
