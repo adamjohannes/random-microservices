@@ -3,6 +3,7 @@ package postgres
 import (
 	"account/internal/domain"
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -63,7 +64,12 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 // Create adds a new Account entry in the database.
 func (r *AccountRepository) Create(ctx context.Context, account *domain.Account) error {
 	dbModel := toDBModel(account)
-	return r.db.WithContext(ctx).Create(&dbModel).Error
+	err := r.db.WithContext(ctx).Create(&dbModel).Error
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return domain.ErrEmailTaken
+	}
+
+	return err
 }
 
 // GetByID returns an Account entry from the database by ID.
