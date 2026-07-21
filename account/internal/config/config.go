@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -19,6 +20,8 @@ type Config struct {
 	Port          string
 	Environment   string
 	DatabaseUrl   string
+	JWTSecret     string
+	JWTExpiry     time.Duration
 	LoggerOptions []zap.Option
 }
 
@@ -31,15 +34,26 @@ func Load() (*Config, error) {
 
 	_ = godotenv.Load()
 
+	jwtExpiryStr := getEnvOrDefault("JWT_EXPIRY", "24h")
+	jwtExpiry, err := time.ParseDuration(jwtExpiryStr)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
 		Port:          getEnvOrDefault("PORT", "8080"),
 		Environment:   getEnvOrDefault("ENVIRONMENT", "development"),
 		DatabaseUrl:   os.Getenv("DATABASE_URL"),
+		JWTSecret:     os.Getenv("JWT_SECRET"),
+		JWTExpiry:     jwtExpiry,
 		LoggerOptions: loggerOptions,
 	}
 
 	// Validate required variables. If this fails, the app should crash on startup.
 	if cfg.DatabaseUrl == "" {
+		return nil, fmt.Errorf("%w: %v", errRequiredEnvMissing, "DATABASE_URL")
+	}
+	if cfg.JWTSecret == "" {
 		return nil, fmt.Errorf("%w: %v", errRequiredEnvMissing, "DATABASE_URL")
 	}
 
