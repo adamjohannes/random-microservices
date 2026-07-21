@@ -2,6 +2,7 @@ package main
 
 import (
 	"account/internal/adapter/storage/postgres"
+	"account/internal/auth"
 	"account/internal/config"
 	"account/internal/delivery/http"
 	"account/internal/usecase"
@@ -44,13 +45,16 @@ func main() {
 	accountService := usecase.NewAccountUsecase(accountRepo)
 	accountHandler := http.NewAccountHandler(accountService)
 
+	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.JWTExpiry)
+	authMiddleware := http.AuthMiddleware(jwtService)
+
 	// Setup Gin router and delivery layer
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.Default()
 
-	http.RegisterRoutes(router, accountHandler)
+	http.RegisterRoutes(router, accountHandler, authMiddleware)
 
 	// Start the HTTP server
 	addr := fmt.Sprintf(":%s", cfg.Port)
