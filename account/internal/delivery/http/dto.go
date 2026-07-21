@@ -13,6 +13,13 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type LoginResponse struct {
+	AccessToken string          `json:"access_token"`
+	TokenType   string          `json:"token_type"`
+	ExpiresIn   int             `json:"expires_in"` // in seconds
+	Account     AccountResponse `json:"account"`
+}
+
 type UpdateRequest struct {
 	Name  string `json:"name"`
 	Email string `json:"email" binding:"omitempty,email"`

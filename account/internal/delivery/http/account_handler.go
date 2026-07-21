@@ -16,6 +16,8 @@ type AccountHandler struct {
 var (
 	invalidRequestPayload = "invalid request payload"
 	internalServerError   = "internal server error"
+	tokenType             = "Bearer"
+	tokenExpiry           = 86400 // 24h in seconds
 )
 
 func NewAccountHandler(service *usecase.AccountUsecase) *AccountHandler {
@@ -39,8 +41,40 @@ func (h *AccountHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, toAccountResponse(account))
 }
 
+// Login authenticates a user.
+func (h *AccountHandler) Login(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
+		return
+	}
+
+	account, token, err := h.service.Authenticate(c.Request.Context(), req.Email, req.Password)
+	if err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, LoginResponse{
+		AccessToken: token,
+		TokenType:   tokenType,
+		ExpiresIn:   tokenExpiry,
+		Account:     toAccountResponse(account),
+	})
+}
+
+// Protected Routes ----------------------------------------------------------------------------------------------------
+
 // GetById fetches an active Account using the ID in the URL parameter.
 func (h *AccountHandler) GetById(c *gin.Context) {
+	requestedID := c.Param("id")
+	tokenID := c.GetString("accountID")
+
+	if requestedID != tokenID {
+		h.handleError(c, domain.ErrForbidden)
+		return
+	}
+
 	id := c.Param("id")
 
 	account, err := h.service.GetActiveAccount(c.Request.Context(), id)
@@ -54,7 +88,15 @@ func (h *AccountHandler) GetById(c *gin.Context) {
 
 // Delete soft deletes an Account.
 func (h *AccountHandler) Delete(c *gin.Context) {
-	id := c.Param("id")
+	requestedID := c.Param("id")
+	tokenID := c.GetString("accountID")
+
+	if requestedID != tokenID {
+		h.handleError(c, domain.ErrForbidden)
+		return
+	}
+
+	id := requestedID
 
 	err := h.service.RemoveAccount(c.Request.Context(), id)
 	if err != nil {
@@ -65,26 +107,18 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// Login authenticates a user.
-func (h *AccountHandler) Login(c *gin.Context) {
-	var req LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
-		return
-	}
-
-	account, err := h.service.Authenticate(c.Request.Context(), req.Email, req.Password)
-	if err != nil {
-		h.handleError(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, toAccountResponse(account))
-}
-
 // Update changes an Account name and e-mail address.
 func (h *AccountHandler) Update(c *gin.Context) {
-	id := c.Param("id")
+	requestedID := c.Param("id")
+	tokenID := c.GetString("accountID")
+
+	if requestedID != tokenID {
+		h.handleError(c, domain.ErrForbidden)
+		return
+	}
+
+	id := requestedID
+
 	var req UpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
@@ -102,7 +136,16 @@ func (h *AccountHandler) Update(c *gin.Context) {
 
 // ChangePassword changes an Account password.
 func (h *AccountHandler) ChangePassword(c *gin.Context) {
-	id := c.Param("id")
+	requestedID := c.Param("id")
+	tokenID := c.GetString("accountID")
+
+	if requestedID != tokenID {
+		h.handleError(c, domain.ErrForbidden)
+		return
+	}
+
+	id := requestedID
+
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
@@ -137,6 +180,8 @@ func (h *AccountHandler) handleError(c *gin.Context, err error) {
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	case errors.Is(err, domain.ErrForbidden):
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	case errors.Is(err, domain.ErrInvalidAccountID) ||
 		errors.Is(err, domain.ErrEmailEmpty) ||
 		errors.Is(err, domain.ErrInvalidEmail) ||
