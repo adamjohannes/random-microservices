@@ -61,6 +61,11 @@ func NewAccountRepository(db *gorm.DB) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
+// Migrate runs the database migrations.
+func Migrate(db *gorm.DB) error {
+	return db.AutoMigrate(&accountDBModel{})
+}
+
 // Create adds a new Account entry in the database.
 func (r *AccountRepository) Create(ctx context.Context, account *domain.Account) error {
 	dbModel := toDBModel(account)

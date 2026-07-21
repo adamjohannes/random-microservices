@@ -36,7 +36,9 @@ func main() {
 	}
 	logger.Info("Successfully conected to the dabase")
 
-	// TODO: An auto-migrate function needs to be added here
+	if err := postgres.Migrate(db); err != nil {
+		logger.Fatal("Failed to run database migrations", zap.Error(err))
+	}
 
 	accountRepo := postgres.NewAccountRepository(db)
 	accountService := usecase.NewAccountUsecase(accountRepo)
