@@ -2,15 +2,24 @@ package http
 
 import (
 	"account/internal/domain"
-	"account/internal/usecase"
+	"context"
 	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+type AccountService interface {
+	RegisterAccount(ctx context.Context, email, password, name string) (*domain.Account, error)
+	Authenticate(ctx context.Context, email, password string) (*domain.Account, string, error)
+	GetActiveAccount(ctx context.Context, id string) (*domain.Account, error)
+	UpdateAccount(ctx context.Context, id, name, email string) error
+	ChangePassword(ctx context.Context, id, oldPassword, newPassword string) error
+	RemoveAccount(ctx context.Context, id string) error
+}
+
 type AccountHandler struct {
-	service *usecase.AccountUsecase
+	service AccountService
 }
 
 var (
@@ -20,7 +29,7 @@ var (
 	tokenExpiry           = 86400 // 24h in seconds
 )
 
-func NewAccountHandler(service *usecase.AccountUsecase) *AccountHandler {
+func NewAccountHandler(service AccountService) *AccountHandler {
 	return &AccountHandler{service: service}
 }
 
