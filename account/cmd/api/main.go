@@ -31,7 +31,7 @@ func main() {
 	logger.Info("Starting Account microservice...")
 
 	// Connect to database
-	db, err := gorm.Open(gormpostgres.Open(cfg.DatabaseUrl), &gorm.Config{})
+	db, err := gorm.Open(gormpostgres.Open(cfg.DatabaseUrl), &gorm.Config{TranslateError: true})
 	if err != nil {
 		logger.Fatal("Failed to connect to the database", zap.Error(err))
 	}
