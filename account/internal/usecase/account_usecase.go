@@ -7,7 +7,8 @@ import (
 )
 
 type AccountUsecase struct {
-	repo domain.AccountRepository
+	repo         domain.AccountRepository
+	tokenService domain.TokenService
 }
 
 func NewAccountUsecase(repo domain.AccountRepository) *AccountUsecase {
@@ -15,20 +16,25 @@ func NewAccountUsecase(repo domain.AccountRepository) *AccountUsecase {
 }
 
 // Authenticate verifies credentials and returns the account if valid
-func (u *AccountUsecase) Authenticate(ctx context.Context, email, plainTextPassword string) (*domain.Account, error) {
+func (u *AccountUsecase) Authenticate(ctx context.Context, email, plainTextPassword string) (*domain.Account, string, error) {
 	account, err := u.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, domain.ErrAccountNotFound) {
-			return nil, domain.ErrInvalidCredentials
+			return nil, "", domain.ErrInvalidCredentials
 		}
-		return nil, err
+		return nil, "", err
 	}
 
 	if account.IsDeleted() || !account.Password.Compare(plainTextPassword) {
-		return nil, domain.ErrInvalidCredentials
+		return nil, "", domain.ErrInvalidCredentials
 	}
 
-	return account, nil
+	token, err := u.tokenService.Generate(account.ID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return account, token, nil
 }
 
 // RegisterAccount handles the creation of a new user account.
