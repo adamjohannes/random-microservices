@@ -13,6 +13,11 @@ type AccountHandler struct {
 	service *usecase.AccountUsecase
 }
 
+var (
+	invalidRequestPayload = "invalid request payload"
+	internalServerError   = "internal server error"
+)
+
 func NewAccounHandler(service *usecase.AccountUsecase) *AccountHandler {
 	return &AccountHandler{service: service}
 }
@@ -21,7 +26,7 @@ func NewAccounHandler(service *usecase.AccountUsecase) *AccountHandler {
 func (h *AccountHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
 		return
 	}
 
@@ -64,7 +69,7 @@ func (h *AccountHandler) Delete(c *gin.Context) {
 func (h *AccountHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
 		return
 	}
 
@@ -82,7 +87,7 @@ func (h *AccountHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var req UpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
 		return
 	}
 
@@ -100,7 +105,7 @@ func (h *AccountHandler) ChangePassword(c *gin.Context) {
 	id := c.Param("id")
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidRequestPayload})
 		return
 	}
 
@@ -130,6 +135,8 @@ func (h *AccountHandler) handleError(c *gin.Context, err error) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 	case errors.Is(err, domain.ErrEmailTaken):
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+	case errors.Is(err, domain.ErrInvalidCredentials):
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 	case errors.Is(err, domain.ErrInvalidAccountID) ||
 		errors.Is(err, domain.ErrEmailEmpty) ||
 		errors.Is(err, domain.ErrInvalidEmail) ||
@@ -139,6 +146,6 @@ func (h *AccountHandler) handleError(c *gin.Context, err error) {
 		errors.Is(err, domain.ErrPasswordTooWeak):
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": internalServerError})
 	}
 }

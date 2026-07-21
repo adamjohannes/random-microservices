@@ -3,6 +3,7 @@ package usecase
 import (
 	"account/internal/domain"
 	"context"
+	"errors"
 )
 
 type AccountUsecase struct {
@@ -17,16 +18,14 @@ func NewAccountUsecase(repo domain.AccountRepository) *AccountUsecase {
 func (u *AccountUsecase) Authenticate(ctx context.Context, email, plainTextPassword string) (*domain.Account, error) {
 	account, err := u.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return nil, domain.ErrAccountNotFound
+		if errors.Is(err, domain.ErrAccountNotFound) {
+			return nil, domain.ErrInvalidCredentials
+		}
+		return nil, err
 	}
 
-	// Users shouldn't be able to authenticate into deleted accounts
-	if account.IsDeleted() {
-		return nil, domain.ErrAccountNotFound
-	}
-
-	if !account.Password.Compare(plainTextPassword) {
-		return nil, domain.ErrAccountNotFound // keep error generic for security
+	if account.IsDeleted() || !account.Password.Compare(plainTextPassword) {
+		return nil, domain.ErrInvalidCredentials
 	}
 
 	return account, nil
@@ -122,7 +121,7 @@ func (u *AccountUsecase) ChangePassword(ctx context.Context, id, oldPassword, ne
 	}
 
 	if !account.Password.Compare(oldPassword) {
-		return domain.ErrAccountNotFound // keep error generic for security
+		return domain.ErrInvalidCredentials
 	}
 
 	if err := account.UpdatePassword(newPassword); err != nil {
