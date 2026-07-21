@@ -72,7 +72,7 @@ func (a *Account) UpdateEmail(newAddress string) error {
 	}
 
 	a.Email = newEmail
-	a.UpdatedAt = time.Now()
+	a.UpdatedAt = time.Now().UTC()
 	return nil
 }
 
@@ -84,7 +84,7 @@ func (a *Account) UpdatePassword(newValue string) error {
 	}
 
 	a.Password = newPassword
-	a.UpdatedAt = time.Now()
+	a.UpdatedAt = time.Now().UTC()
 	return nil
 }
 
@@ -96,7 +96,7 @@ func (a *Account) UpdateName(newValue string) error {
 	}
 
 	a.Name = newName
-	a.UpdatedAt = time.Now()
+	a.UpdatedAt = time.Now().UTC()
 	return nil
 }
 
