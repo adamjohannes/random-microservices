@@ -11,8 +11,8 @@ type AccountUsecase struct {
 	tokenService domain.TokenService
 }
 
-func NewAccountUsecase(repo domain.AccountRepository) *AccountUsecase {
-	return &AccountUsecase{repo: repo}
+func NewAccountUsecase(repo domain.AccountRepository, tokenService domain.TokenService) *AccountUsecase {
+	return &AccountUsecase{repo: repo, tokenService: tokenService}
 }
 
 // Authenticate verifies credentials and returns the account if valid

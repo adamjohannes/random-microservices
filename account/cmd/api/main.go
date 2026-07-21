@@ -42,10 +42,10 @@ func main() {
 	}
 
 	accountRepo := postgres.NewAccountRepository(db)
-	accountService := usecase.NewAccountUsecase(accountRepo)
+	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.JWTExpiry)
+	accountService := usecase.NewAccountUsecase(accountRepo, jwtService)
 	accountHandler := http.NewAccountHandler(accountService)
 
-	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.JWTExpiry)
 	authMiddleware := http.AuthMiddleware(jwtService)
 
 	// Setup Gin router and delivery layer
