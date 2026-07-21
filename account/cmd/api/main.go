@@ -42,7 +42,7 @@ func main() {
 
 	accountRepo := postgres.NewAccountRepository(db)
 	accountService := usecase.NewAccountUsecase(accountRepo)
-	accountHandler := http.NewAccounHandler(accountService)
+	accountHandler := http.NewAccountHandler(accountService)
 
 	// Setup Gin router and delivery layer
 	if cfg.Environment == "production" {

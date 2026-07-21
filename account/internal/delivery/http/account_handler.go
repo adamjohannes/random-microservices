@@ -18,7 +18,7 @@ var (
 	internalServerError   = "internal server error"
 )
 
-func NewAccounHandler(service *usecase.AccountUsecase) *AccountHandler {
+func NewAccountHandler(service *usecase.AccountUsecase) *AccountHandler {
 	return &AccountHandler{service: service}
 }
 
@@ -140,7 +140,7 @@ func (h *AccountHandler) handleError(c *gin.Context, err error) {
 	case errors.Is(err, domain.ErrInvalidAccountID) ||
 		errors.Is(err, domain.ErrEmailEmpty) ||
 		errors.Is(err, domain.ErrInvalidEmail) ||
-		errors.Is(err, domain.ErrInvalidNameLenght) ||
+		errors.Is(err, domain.ErrInvalidNameLength) ||
 		errors.Is(err, domain.ErrInvalidNameCharacter) ||
 		errors.Is(err, domain.ErrPasswordTooShort) ||
 		errors.Is(err, domain.ErrPasswordTooWeak):
