@@ -26,6 +26,10 @@ class NotCourseAuthorError(DomainAuthorizationError):
     def __init__(self, message: str = "only the course author can perform this action") -> None:
         super().__init__(message)
 
+class AuthorCannotBeAssigneeError(ResourceStateError):
+    def __init__(self, message: str = "author cannot be assigned to their own course") -> None:
+        super().__init__(message)
+
 # --- Specific State Errors
 
 class AlreadyArchivedError(ResourceStateError):

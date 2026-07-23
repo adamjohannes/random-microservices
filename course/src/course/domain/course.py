@@ -8,7 +8,7 @@ from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
 from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError, \
-    ResourceStateError, NotCourseAuthorError
+    ResourceStateError, NotCourseAuthorError, AuthorCannotBeAssigneeError
 from src.course.domain.user import User
 
 
@@ -135,12 +135,12 @@ class Course:
 
         Raises:
             ResourceStateError: If the course is archived.
-            DomainValidationError: If user_id is the course author.
+            AuthorCannotBeAssigneeError: If user_id is the course author.
         """
         self._ensure_modifiable()
 
         if user_id == self.author.id:
-            raise DomainValidationError("author cannot be assigned to their own course")
+            raise AuthorCannotBeAssigneeError("author cannot be assigned to their own course")
 
         self.assignee_ids.add(user_id)
         self.updated_at = datetime.now(timezone.utc)
