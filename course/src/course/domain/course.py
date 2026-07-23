@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Set
 from uuid import UUID, uuid4
 
-from course_chapter import CourseChapter
+from src.course.domain.course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
