@@ -7,8 +7,8 @@ from src.course.domain.course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, ResourceStateError, \
-    NotCourseAuthorError, AuthorCannotBeAssigneeError, ChapterNotFoundError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, NotCourseAuthorError, \
+    AuthorCannotBeAssigneeError, ChapterNotFoundError, ArchivedCourseError
 from src.course.domain.user import User
 
 
@@ -74,7 +74,7 @@ class Course:
             actor_id: The user performing the action; must be the author.
 
         Raises:
-            ResourceStateError: If the course is archived.
+            ArchivedCourseError: If the course is archived.
             NotCourseAuthorError: If actor_id is not the course author.
             InvalidTitleLength: If title fails Title validation.
             InvalidChapterBodyLength: If body fails ChapterBody validation.
@@ -134,7 +134,7 @@ class Course:
             user_id: The user to enroll; cannot be the course author.
 
         Raises:
-            ResourceStateError: If the course is archived.
+            ArchivedCourseError: If the course is archived.
             AuthorCannotBeAssigneeError: If user_id is the course author.
         """
         self._ensure_modifiable()
@@ -153,7 +153,7 @@ class Course:
             user_id: The user to unenroll.
 
         Raises:
-            ResourceStateError: If the course is archived.
+            ArchivedCourseError: If the course is archived.
         """
         self._ensure_modifiable()
 
@@ -172,7 +172,8 @@ class Course:
 
         Raises:
             NotCourseAuthorError: If actor_id is not the course author.
-            ResourceStateError: If the course or target chapter is archived.
+            ArchivedCourseError: If the course is archived.
+            ResourceStateError: If the chapter is archived.
             ChapterNotFoundError: If no chapter with chapter_id exists.
             InvalidTitleLength: If title_str fails Title validation.
             InvalidChapterBodyLength: If body_str fails ChapterBody validation.
@@ -199,7 +200,7 @@ class Course:
 
         Raises:
             NotCourseAuthorError: If actor_id is not the course author.
-            ResourceStateError: If the course is archived.
+            ArchivedCourseError: If the course is archived.
             ChapterNotFoundError: If no chapter with chapter_id exists.
             AlreadyArchivedError: If the target chapter is already archived.
         """
@@ -220,7 +221,7 @@ class Course:
 
     def _ensure_modifiable(self) -> None:
         if self.is_archived:
-            raise ResourceStateError("cannot modify an archived course")
+            raise ArchivedCourseError()
 
     def _ensure_author(self, actor_id: UUID) -> None:
         if self.author.id != actor_id:
