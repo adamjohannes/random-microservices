@@ -27,16 +27,18 @@ class Chapter:
 
     def archive(self):
         if self.is_archived:
-            now = datetime.now(timezone.utc)
-            self.archived_at = now
-            self.updated_at = now
-        raise AlreadyArchivedError()
+            raise AlreadyArchivedError()
+
+        now = datetime.now(timezone.utc)
+        self.archived_at = now
+        self.updated_at = now
 
     def unarchive(self):
         if not self.is_archived:
-            self.archived_at = None
-            self.updated_at = datetime.now(timezone.utc)
-        raise NotArchivedError()
+            raise NotArchivedError()
+
+        self.archived_at = None
+        self.updated_at = datetime.now(timezone.utc)
 
     @property
     def is_archived(self) -> bool:

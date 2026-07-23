@@ -26,18 +26,20 @@ class Course:
         return chapter
 
     def archive(self):
-        if self.archived_at is None:
-            now = datetime.now(timezone.utc)
-            self.archived_at = now
-            self.updated_at = now
-        raise AlreadyArchivedError()
+        if self.is_archived:
+            raise AlreadyArchivedError()
+
+        now = datetime.now(timezone.utc)
+        self.archived_at = now
+        self.updated_at = now
 
     def unarchive(self):
-        if self.archived_at is not None:
-            self.archived_at = None
-            self.updated_at = datetime.now(timezone.utc)
-        raise NotArchivedError()
+        if not self.is_archived:
+            raise NotArchivedError()
+
+        self.archived_at = None
+        self.updated_at = datetime.now(timezone.utc)
 
     @property
     def is_archived(self) -> bool:
-        return self.archived_ad is not None
+        return self.archived_at is not None
