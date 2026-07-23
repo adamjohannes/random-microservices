@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Set
 from uuid import UUID, uuid4
 
-from chapter import Chapter
+from course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.title import Title
 from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError
@@ -16,7 +16,7 @@ class Course:
     author: User
     title: Title
     description: str
-    chapters: List[Chapter] = field(default_factory=list)
+    chapters: List[CourseChapter] = field(default_factory=list)
     assignee_ids: Set[UUID] = field(default_factory=set)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -40,8 +40,8 @@ class Course:
             archived_at=None
         )
 
-    def add_chapter(self, title: str, body: str) -> Chapter:
-        chapter = Chapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
+    def add_chapter(self, title: str, body: str) -> CourseChapter:
+        chapter = CourseChapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
         self.chapters.append(chapter)
         self.updated_at = datetime.now(timezone.utc)
         return chapter

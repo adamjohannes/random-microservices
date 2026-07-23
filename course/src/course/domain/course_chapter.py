@@ -9,7 +9,7 @@ from src.course.domain.title import Title
 
 
 @dataclass
-class Chapter:
+class CourseChapter:
     id: UUID
     title: Title
     body: ChapterBody
