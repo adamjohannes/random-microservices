@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
+
 from chapter import Chapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.title import Title
