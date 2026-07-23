@@ -4,4 +4,11 @@ version = "0.1.0"
 description = "Course service."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "alembic>=1.18.5",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.139.2",
+    "pyjwt>=2.13.0",
+    "sqlalchemy>=2.0.51",
+    "uvicorn>=0.51.0",
+]
