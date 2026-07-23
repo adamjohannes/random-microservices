@@ -14,6 +14,20 @@ from src.course.domain.user import User
 
 @dataclass
 class Course:
+    """
+    A course is a collection of knowledge divided in chapters.
+
+    Attributes:
+        id: course id
+        author: course author
+        title: course title
+        description: course description
+        chapters: list of course chapters
+        assignee_ids: set of users who have assigned to this course
+        created_at: course creation date
+        updated_at: course update date
+        archived_at: course archive date
+    """
     id: UUID
     author: User
     title: Title
@@ -28,7 +42,15 @@ class Course:
     def create(cls, author: User, title_str: str, description: str) -> "Course":
         """
         Factory for creating a brand new Course.
-        Instantiates Value Objects and generates default metadata.
+
+        Args:
+            author: The user who owns and can modify the course.
+            title_str: Raw title text, validated into a Title.
+            description: Raw description text, validated into a CourseDescription.
+
+        Raises:
+            InvalidTitleLength: If title_str fails Title validation.
+            InvalidCourseDescriptionLenght: If description fails CourseDescription validation.
         """
         now = datetime.now(timezone.utc)
         return cls(
@@ -43,15 +65,39 @@ class Course:
         )
 
     def add_chapter(self, title: str, body: str, actor_id: UUID) -> CourseChapter:
+        """
+        Append a new chapter to the course.
+
+        Args:
+            title: Raw chapter title, validated into a Title.
+            body: Raw chapter content, validated into a ChapterBody.
+            actor_id: The user performing the action; must be the author.
+
+        Raises:
+            ResourceStateError: If the course is archived.
+            NotCourseAuthorError: If actor_id is not the course author.
+            InvalidTitleLength: If title fails Title validation.
+            InvalidChapterBodyLength: If body fails ChapterBody validation.
+        """
         self._ensure_modifiable()
         self._ensure_author(actor_id)
 
-        chapter = CourseChapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
+        chapter = CourseChapter(id=uuid4(), index=len(self.chapters), title=Title(title), body=ChapterBody(body))
         self.chapters.append(chapter)
         self.updated_at = datetime.now(timezone.utc)
         return chapter
 
     def archive(self, actor_id: UUID) -> None:
+        """
+        Archive the course, making it read-only.
+
+        Args:
+            actor_id: The user performing the action; must be the author.
+
+        Raises:
+            NotCourseAuthorError: If actor_id is not the course author.
+            AlreadyArchivedError: If the course is already archived.
+        """
         self._ensure_author(actor_id)
 
         if self.is_archived:
@@ -62,6 +108,16 @@ class Course:
         self.updated_at = now
 
     def unarchive(self, actor_id: UUID) -> None:
+        """
+        Restore an archived course to a modifiable state.
+
+        Args:
+            actor_id: The user performing the action; must be the author.
+
+        Raises:
+            NotCourseAuthorError: If actor_id is not the course author.
+            NotArchivedError: If the course is not currently archived.
+        """
         self._ensure_author(actor_id)
 
         if not self.is_archived:
@@ -71,6 +127,16 @@ class Course:
         self.updated_at = datetime.now(timezone.utc)
 
     def enroll_user(self, user_id: UUID) -> None:
+        """
+        Enroll a user as an assignee of the course.
+
+        Args:
+            user_id: The user to enroll; cannot be the course author.
+
+        Raises:
+            ResourceStateError: If the course is archived.
+            DomainValidationError: If user_id is the course author.
+        """
         self._ensure_modifiable()
 
         if user_id == self.author.id:
@@ -80,12 +146,37 @@ class Course:
         self.updated_at = datetime.now(timezone.utc)
 
     def unenroll_user(self, user_id: UUID) -> None:
+        """
+        Remove a user from the course's assignees; a no-op if not enrolled.
+
+        Args:
+            user_id: The user to unenroll.
+
+        Raises:
+            ResourceStateError: If the course is archived.
+        """
         self._ensure_modifiable()
 
         self.assignee_ids.discard(user_id)
         self.updated_at = datetime.now(timezone.utc)
 
     def update_chapter(self, actor_id: UUID, chapter_id: UUID, title_str: str, body_str: str) -> None:
+        """
+        Replace the title and body of an existing chapter.
+
+        Args:
+            actor_id: The user performing the action; must be the author.
+            chapter_id: The id of the chapter to update.
+            title_str: Raw chapter title, validated into a Title.
+            body_str: Raw chapter content, validated into a ChapterBody.
+
+        Raises:
+            NotCourseAuthorError: If actor_id is not the course author.
+            ResourceStateError: If the course or target chapter is archived.
+            DomainValidationError: If no chapter with chapter_id exists.
+            InvalidTitleLength: If title_str fails Title validation.
+            InvalidChapterBodyLength: If body_str fails ChapterBody validation.
+        """
         self._ensure_author(actor_id)
         self._ensure_modifiable()
 
@@ -99,6 +190,19 @@ class Course:
         self.updated_at = datetime.now(timezone.utc)
 
     def archive_chapter(self, actor_id: UUID, chapter_id: UUID) -> None:
+        """
+        Archive a single chapter within the course.
+
+        Args:
+            actor_id: The user performing the action; must be the author.
+            chapter_id: The id of the chapter to archive.
+
+        Raises:
+            NotCourseAuthorError: If actor_id is not the course author.
+            ResourceStateError: If the course is archived.
+            DomainValidationError: If no chapter with chapter_id exists.
+            AlreadyArchivedError: If the target chapter is already archived.
+        """
         self._ensure_author(actor_id)
         self._ensure_modifiable()
 
