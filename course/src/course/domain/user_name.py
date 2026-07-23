@@ -16,6 +16,16 @@ class InvalidNameCharacterError(DomainValidationError):
 
 @dataclass(frozen=True)
 class UserName:
+    """
+    A validated, immutable user name.
+
+    The value is stripped of surrounding whitespace, must be 2-50 characters
+    long, and may contain only alphabetical characters and spaces.
+
+    Raises:
+        InvalidNameLenghtError: If the value is not 2-50 characters.
+        InvalidNameCharacterError: If the value contains non-alphabetical characters.
+    """
     value: str
 
     def __post_init__(self) -> None:
