@@ -18,6 +18,16 @@ class InvalidEmailFormatError(DomainValidationError):
 
 @dataclass(frozen=True)
 class UserEmail:
+    """
+    A validated, immutable email address.
+
+    The value is stripped and lowercased, must be non-empty, and must match
+    the expected email format.
+
+    Raises:
+        EmptyEmailError: If the value is empty.
+        InvalidEmailFormatError: If the value is not a valid email.
+    """
     value: str
 
     def __post_init__(self) -> None:
