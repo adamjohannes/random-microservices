@@ -1,13 +1,15 @@
 import re
 from dataclasses import dataclass
 
+from src.course.domain.exceptions import DomainValidationError
+
 NAME_REGEX = re.compile(r"^[a-zA-Z\s]+$")
 
-class InvalidNameLenghtError(Exception):
+class InvalidNameLenghtError(DomainValidationError):
     def __init__(self, message: str = "name must be between 2 and 50 characters") -> None:
         super().__init__(message)
 
-class InvalidNameCharacterError(Exception):
+class InvalidNameCharacterError(DomainValidationError):
     def __init__(self, message: str = "name must contain only alphabetical characters") -> None:
         super().__init__(message)
 

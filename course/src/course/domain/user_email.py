@@ -1,15 +1,17 @@
 import re
 from dataclasses import dataclass
 
+from src.course.domain.exceptions import DomainValidationError
+
 EMAIL_REGEX = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$")
 
 
-class EmptyEmailError(Exception):
+class EmptyEmailError(DomainValidationError):
     def __init__(self, message: str = "email cannot be empty") -> None:
         super().__init__(message)
 
 
-class InvalidEmailFormatError(Exception):
+class InvalidEmailFormatError(DomainValidationError):
     def __init__(self, message: str = "invalid email format") -> None:
         super().__init__(message)
 

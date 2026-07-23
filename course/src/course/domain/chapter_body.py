@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
+from src.course.domain.exceptions import DomainValidationError
 
-class InvalidChapterBodyError(Exception):
+
+class InvalidChapterBodyError(DomainValidationError):
     def __init__(self, message: str) -> None:
         super().__init__(message)
 
