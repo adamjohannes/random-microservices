@@ -8,7 +8,7 @@ from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
 from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError, \
-    ResourceStateError
+    ResourceStateError, NotCourseAuthorError
 from src.course.domain.user import User
 
 
@@ -42,14 +42,18 @@ class Course:
             archived_at=None
         )
 
-    def add_chapter(self, title: str, body: str) -> CourseChapter:
+    def add_chapter(self, title: str, body: str, actor_id: UUID) -> CourseChapter:
         self._ensure_modifiable()
+        self._ensure_author(actor_id)
+
         chapter = CourseChapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
         self.chapters.append(chapter)
         self.updated_at = datetime.now(timezone.utc)
         return chapter
 
-    def archive(self):
+    def archive(self, actor_id: UUID) -> None:
+        self._ensure_author(actor_id)
+
         if self.is_archived:
             raise AlreadyArchivedError()
 
@@ -57,7 +61,9 @@ class Course:
         self.archived_at = now
         self.updated_at = now
 
-    def unarchive(self):
+    def unarchive(self, actor_id: UUID) -> None:
+        self._ensure_author(actor_id)
+
         if not self.is_archived:
             raise NotArchivedError()
 
@@ -79,7 +85,8 @@ class Course:
         self.assignee_ids.discard(user_id)
         self.updated_at = datetime.now(timezone.utc)
 
-    def update_chapter(self, chapter_id: UUID, title_str: str, body_str: str) -> None:
+    def update_chapter(self, actor_id: UUID, chapter_id: UUID, title_str: str, body_str: str) -> None:
+        self._ensure_author(actor_id)
         self._ensure_modifiable()
 
         chapter = next((c for c in self.chapters if c.id == chapter_id), None)
@@ -91,7 +98,8 @@ class Course:
 
         self.updated_at = datetime.now(timezone.utc)
 
-    def archive_chapter(self, chapter_id: UUID) -> None:
+    def archive_chapter(self, actor_id: UUID, chapter_id: UUID) -> None:
+        self._ensure_author(actor_id)
         self._ensure_modifiable()
 
         chapter = None
@@ -112,3 +120,7 @@ class Course:
     def _ensure_modifiable(self) -> None:
         if self.is_archived:
             raise ResourceStateError("cannot modify an archived course")
+
+    def _ensure_author(self, actor_id: UUID) -> None:
+        if self.author.id != actor_id:
+            raise NotCourseAuthorError()

@@ -16,6 +16,16 @@ class ResourceStateError(DomainError):
     """
     pass
 
+class DomainAuthorizationError(DomainError):
+    """
+    Raised when a user attemps an action they don't have permission for.
+    The delivery layer will map this to a 403 Forbidden.
+    """
+
+class NotCourseAuthorError(DomainAuthorizationError):
+    def __init__(self, message: str = "only the course author can perform this action") -> None:
+        super().__init__(message)
+
 # --- Specific State Errors
 
 class AlreadyArchivedError(ResourceStateError):
