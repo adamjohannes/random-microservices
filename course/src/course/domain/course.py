@@ -91,6 +91,20 @@ class Course:
 
         self.updated_at = datetime.now(timezone.utc)
 
+    def archive_chapter(self, chapter_id: UUID) -> None:
+        self._ensure_modifiable()
+
+        chapter = None
+        for chapter in self.chapters:
+            if chapter.id == chapter_id:
+                break
+
+        if not chapter:
+            raise DomainValidationError(f"chapter {chapter_id} not found in this course")
+
+        chapter.archive()
+        self.updated_at = datetime.now(timezone.utc)
+
     @property
     def is_archived(self) -> bool:
         return self.archived_at is not None
