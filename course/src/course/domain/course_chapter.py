@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from src.course.domain.chapter_body import ChapterBody
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, ResourceStateError
 from src.course.domain.title import Title
 
 
@@ -18,10 +18,14 @@ class CourseChapter:
     archived_at: Optional[datetime] = None
 
     def update_title(self, title: Title) -> None:
+        self._ensure_modifiable()
+
         self.title = title
         self.updated_at = datetime.now(timezone.utc)
 
     def update_body(self, body: ChapterBody) -> None:
+        self._ensure_modifiable()
+
         self.body = body
         self.updated_at = datetime.now(timezone.utc)
 
@@ -43,3 +47,7 @@ class CourseChapter:
     @property
     def is_archived(self) -> bool:
         return self.archived_at is not None
+
+    def _ensure_modifiable(self) -> None:
+        if self.is_archived:
+            raise ResourceStateError("cannot modify an archived chapter")

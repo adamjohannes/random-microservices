@@ -7,7 +7,8 @@ from course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError, \
+    ResourceStateError
 from src.course.domain.user import User
 
 
@@ -42,6 +43,7 @@ class Course:
         )
 
     def add_chapter(self, title: str, body: str) -> CourseChapter:
+        self._ensure_modifiable()
         chapter = CourseChapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
         self.chapters.append(chapter)
         self.updated_at = datetime.now(timezone.utc)
@@ -62,11 +64,9 @@ class Course:
         self.archived_at = None
         self.updated_at = datetime.now(timezone.utc)
 
-    @property
-    def is_archived(self) -> bool:
-        return self.archived_at is not None
-
     def enroll_user(self, user_id: UUID) -> None:
+        self._ensure_modifiable()
+
         if user_id == self.author.id:
             raise DomainValidationError("author cannot be assigned to their own course")
 
@@ -74,10 +74,14 @@ class Course:
         self.updated_at = datetime.now(timezone.utc)
 
     def unenroll_user(self, user_id: UUID) -> None:
+        self._ensure_modifiable()
+
         self.assignee_ids.discard(user_id)
         self.updated_at = datetime.now(timezone.utc)
 
     def update_chapter(self, chapter_id: UUID, title_str: str, body_str: str) -> None:
+        self._ensure_modifiable()
+
         chapter = next((c for c in self.chapters if c.id == chapter_id), None)
         if not chapter:
             raise DomainValidationError(f"chapter {chapter_id} not found in this course")
@@ -86,3 +90,11 @@ class Course:
         chapter.update_body(ChapterBody(body_str))
 
         self.updated_at = datetime.now(timezone.utc)
+
+    @property
+    def is_archived(self) -> bool:
+        return self.archived_at is not None
+
+    def _ensure_modifiable(self) -> None:
+        if self.is_archived:
+            raise ResourceStateError("cannot modify an archived course")
