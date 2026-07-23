@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 from course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
+from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
 from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError
 from src.course.domain.user import User
@@ -15,7 +16,7 @@ class Course:
     id: UUID
     author: User
     title: Title
-    description: str
+    description: CourseDescription
     chapters: List[CourseChapter] = field(default_factory=list)
     assignee_ids: Set[UUID] = field(default_factory=set)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -33,7 +34,7 @@ class Course:
             id=uuid4(),
             author=author,
             title=Title(title_str),
-            description=description,
+            description=CourseDescription(description),
             chapters=[],
             created_at=now,
             updated_at=now,
