@@ -215,6 +215,31 @@ class Course:
         chapter.archive()
         self.updated_at = datetime.now(timezone.utc)
 
+    def unarchive_chapter(self, actor_id: UUID, chapter_id: UUID) -> None:
+        """
+        Restore an archived chapter within the course to a modifiable state.
+
+        Args:
+            actor_id: The user performing the action; must be the author.
+            chapter_id: The id of the chapter to unarchive.
+
+        Raises:
+            NotCourseAuthorError: If actor_id is not the course author.
+            ArchivedCourseError: If the course is archived.
+            ChapterNotFoundError: If no chapter with chapter_id exists.
+            NotArchivedError: If the target chapter is not currently archived.
+        """
+        self._ensure_author(actor_id)
+        self._ensure_modifiable()
+
+        chapter = next((c for c in self.chapters if c.id == chapter_id), None)
+
+        if not chapter:
+            raise ChapterNotFoundError(str(chapter_id))
+
+        chapter.unarchive()
+        self.updated_at = datetime.now(timezone.utc)
+
     @property
     def is_archived(self) -> bool:
         return self.archived_at is not None
