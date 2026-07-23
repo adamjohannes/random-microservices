@@ -39,3 +39,44 @@ class CourseUseCase:
             raise CourseNotFoundError(str(course_id))
 
         return course
+
+    async def add_chapter_to_course(self, actor_id: UUID, course_id: UUID, title: str, body: str) -> None:
+        """
+        Adds a new chapter into an existing course.
+        """
+        course = await self._course_repo.get_by_id(course_id)
+
+        if not course:
+            raise CourseNotFoundError(str(actor_id))
+
+        course.add_chapter(title=title, body=body, actor_id=actor_id)
+        await self._course_repo.save(course)
+
+    async def enroll_user_in_course(self, user_id: UUID, course_id: UUID) -> None:
+        """
+        Enrolls a user in a course.
+        """
+        course = await self.retrieve_course(course_id=course_id)
+
+        if not course:
+            raise CourseNotFoundError(str(course.id))
+
+        user = await self._user_repo.get_by_id(user_id)
+
+        if not user:
+            raise UserNotFoundError(str(user_id))
+
+        course.enroll_user(user_id=user_id)
+        await self._course_repo.save(course)
+
+    async def archive_course(self, actor_id: UUID, course_id: UUID) -> None:
+        """
+        Archives a course.
+        """
+        course = await self.retrieve_course(course_id=course_id)
+
+        if not course:
+            raise CourseNotFoundError(str(course_id))
+
+        course.archive(actor_id=actor_id)
+        await self._course_repo.save(course)
