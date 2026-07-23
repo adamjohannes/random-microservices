@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Set
 from uuid import UUID, uuid4
 
 from chapter import Chapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.title import Title
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError
 from src.course.domain.user import User
 
 
@@ -17,6 +17,7 @@ class Course:
     title: Title
     description: str
     chapters: List[Chapter] = field(default_factory=list)
+    assignee_ids: Set[UUID] = field(default_factory=set)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     archived_at: Optional[datetime] = None
@@ -63,3 +64,24 @@ class Course:
     @property
     def is_archived(self) -> bool:
         return self.archived_at is not None
+
+    def enroll_user(self, user_id: UUID) -> None:
+        if user_id == self.author.id:
+            raise DomainValidationError("author cannot be assigned to their own course")
+
+        self.assignee_ids.add(user_id)
+        self.updated_at = datetime.now(timezone.utc)
+
+    def unenroll_user(self, user_id: UUID) -> None:
+        self.assignee_ids.discard(user_id)
+        self.updated_at = datetime.now(timezone.utc)
+
+    def update_chapter(self, chapter_id: UUID, title_str: str, body_str: str) -> None:
+        chapter = next((c for c in self.chapters if c.id == chapter_id), None)
+        if not chapter:
+            raise DomainValidationError(f"chapter {chapter_id} not found in this course")
+
+        chapter.update_title(Title(title_str))
+        chapter.update_body(ChapterBody(body_str))
+
+        self.updated_at = datetime.now(timezone.utc)
