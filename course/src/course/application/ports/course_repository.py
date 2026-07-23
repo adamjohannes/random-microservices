@@ -6,7 +6,7 @@ from src.course.domain.course import Course
 class CourseRepository(Protocol):
     """
     Port for Course data access.
-    Treats the Course Aggregate Root as a slight unit of work.
+    Treats the Course Aggregate Root as a single unit of work.
     """
 
     async def save(self, course: Course) -> None:
