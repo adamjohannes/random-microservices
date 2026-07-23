@@ -7,8 +7,8 @@ from src.course.domain.course_chapter import CourseChapter
 from src.course.domain.chapter_body import ChapterBody
 from src.course.domain.course_description import CourseDescription
 from src.course.domain.title import Title
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, DomainValidationError, \
-    ResourceStateError, NotCourseAuthorError, AuthorCannotBeAssigneeError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, ResourceStateError, \
+    NotCourseAuthorError, AuthorCannotBeAssigneeError, ChapterNotFoundError
 from src.course.domain.user import User
 
 
@@ -173,7 +173,7 @@ class Course:
         Raises:
             NotCourseAuthorError: If actor_id is not the course author.
             ResourceStateError: If the course or target chapter is archived.
-            DomainValidationError: If no chapter with chapter_id exists.
+            ChapterNotFoundError: If no chapter with chapter_id exists.
             InvalidTitleLength: If title_str fails Title validation.
             InvalidChapterBodyLength: If body_str fails ChapterBody validation.
         """
@@ -182,7 +182,7 @@ class Course:
 
         chapter = next((c for c in self.chapters if c.id == chapter_id), None)
         if not chapter:
-            raise DomainValidationError(f"chapter {chapter_id} not found in this course")
+            raise ChapterNotFoundError(str(chapter_id))
 
         chapter.update_title(Title(title_str))
         chapter.update_body(ChapterBody(body_str))
@@ -200,7 +200,7 @@ class Course:
         Raises:
             NotCourseAuthorError: If actor_id is not the course author.
             ResourceStateError: If the course is archived.
-            DomainValidationError: If no chapter with chapter_id exists.
+            ChapterNotFoundError: If no chapter with chapter_id exists.
             AlreadyArchivedError: If the target chapter is already archived.
         """
         self._ensure_author(actor_id)
@@ -209,7 +209,7 @@ class Course:
         chapter = next((c for c in self.chapters if c.id == chapter_id), None)
 
         if not chapter:
-            raise DomainValidationError(f"chapter {chapter_id} not found in this course")
+            raise ChapterNotFoundError(str(chapter_id))
 
         chapter.archive()
         self.updated_at = datetime.now(timezone.utc)

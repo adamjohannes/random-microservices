@@ -18,19 +18,24 @@ class ResourceStateError(DomainError):
 
 class DomainAuthorizationError(DomainError):
     """
-    Raised when a user attemps an action they don't have permission for.
+    Raised when a user attempts an action they don't have permission for.
     The delivery layer will map this to a 403 Forbidden.
     """
 
-class NotCourseAuthorError(DomainAuthorizationError):
-    def __init__(self, message: str = "only the course author can perform this action") -> None:
-        super().__init__(message)
+class EntityNotFoundError(DomainError):
+    """
+    Raised when a requested entity cannot be found.
+    The delivery layer will map this to a 404 Not Found.
+    """
+    pass
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+# --- ResourceStateError
 
 class AuthorCannotBeAssigneeError(ResourceStateError):
     def __init__(self, message: str = "author cannot be assigned to their own course") -> None:
         super().__init__(message)
-
-# --- Specific State Errors
 
 class AlreadyArchivedError(ResourceStateError):
     def __init__(self, message: str = "already archived") -> None:
@@ -39,3 +44,15 @@ class AlreadyArchivedError(ResourceStateError):
 class NotArchivedError(ResourceStateError):
     def __init__(self, message: str = "not archived") -> None:
         super().__init__(message)
+
+# --- DomainAuthorizationError
+
+class NotCourseAuthorError(DomainAuthorizationError):
+    def __init__(self, message: str = "only the course author can perform this action") -> None:
+        super().__init__(message)
+
+# --- EntityNotFoundError
+
+class ChapterNotFoundError(EntityNotFoundError):
+    def __init__(self, chapter_id: str) -> None:
+        super().__init__(f"Chapter {chapter_id} not found in this course")
