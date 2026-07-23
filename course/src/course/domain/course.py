@@ -20,8 +20,26 @@ class Course:
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     archived_at: Optional[datetime] = None
 
-    def add_chapter(self, title: Title, body: ChapterBody) -> Chapter:
-        chapter = Chapter(id=uuid4(), title=title, body=body)
+    @classmethod
+    def create(cls, author: User, title_str: str, description: str) -> "Course":
+        """
+        Factory for creating a brand new Course.
+        Instantiates Value Objects and generates default metadata.
+        """
+        now = datetime.now(timezone.utc)
+        return cls(
+            id=uuid4(),
+            author=author,
+            title=Title(title_str),
+            description=description,
+            chapters=[],
+            created_at=now,
+            updated_at=now,
+            archived_at=None
+        )
+
+    def add_chapter(self, title: str, body: str) -> Chapter:
+        chapter = Chapter(id=uuid4(), title=Title(title), body=ChapterBody(body))
         self.chapters.append(chapter)
         self.updated_at = datetime.now(timezone.utc)
         return chapter
