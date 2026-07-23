@@ -206,10 +206,7 @@ class Course:
         self._ensure_author(actor_id)
         self._ensure_modifiable()
 
-        chapter = None
-        for chapter in self.chapters:
-            if chapter.id == chapter_id:
-                break
+        chapter = next((c for c in self.chapters if c.id == chapter_id), None)
 
         if not chapter:
             raise DomainValidationError(f"chapter {chapter_id} not found in this course")
