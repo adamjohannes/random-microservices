@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  description: |
+    Account management microservice providing registration, authentication,
+    and account lifecycle operations. Built with Gin and JWT (HS256).
+
+    Authorization is ownership-based: a caller may only read, update, change the
+    password of, or delete their own account. The `:id` in the path must match
+    the `sub` claim of the bearer token, otherwise the request is rejected with
+    `403`.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1/accounts
+    description: Local development server
+
+tags:
+  - name: accounts
+    description: Account registration, authentication, and management
+
+paths:
+  /:
+    post:
+      tags: [accounts]
+      summary: Register a new account
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /login:
+    post:
+      tags: [accounts]
+      summary: Authenticate and obtain an access token
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /{id}:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    get:
+      tags: [accounts]
+      summary: Get an account by ID
+      operationId: getAccountById
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [accounts]
+      summary: Update an account
+      operationId: updateAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequest'
+      responses:
+        '204':
+          description: Account updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [accounts]
+      summary: Delete an account
+      description: Soft-deletes the account.
+      operationId: deleteAccount
+      responses:
+        '204':
+          description: Account deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /{id}/password:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    patch:
+      tags: [accounts]
+      summary: Change an account password
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  security:
+    - bearerAuth: []
+
+  parameters:
+    AccountId:
+      name: id
+      in: path
+      required: true
+      description: Account UUID. Must match the authenticated caller's account.
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        password:
+          type: string
+          format: password
+          description: >-
+            Minimum 8 characters, containing at least one lowercase letter,
+            one uppercase letter, one digit, and one special character.
+          example: Str0ng!Pass
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: 2–50 characters, letters and spaces only.
+          example: Jane Doe
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        password:
+          type: string
+          format: password
+          example: Str0ng!Pass
+
+    UpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: Jane Smith
+        email:
+          type: string
+          format: email
+          description: Optional; validated as an email only when present.
+          example: jane.smith@example.com
+
+    ChangePasswordRequest:
+      type: object
+      required: [old_password, new_password]
+      properties:
+        old_password:
+          type: string
+          format: password
+        new_password:
+          type: string
+          format: password
+          description: >-
+            Minimum 8 characters, containing at least one lowercase letter,
+            one uppercase letter, one digit, and one special character.
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds.
+          example: 86400
+        account:
+          $ref: '#/components/schemas/AccountResponse'
+
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+  responses:
+    BadRequest:
+      description: Invalid request payload or field validation failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalidPayload:
+              value: { error: invalid request payload }
+            invalidEmail:
+              value: { error: invalid email format }
+            weakPassword:
+              value:
+                error: >-
+                  password must contain at least one upper and lower case
+                  characters, a special character and a number
+    Unauthorized:
+      description: Missing/invalid credentials or token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalidCredentials:
+              value: { error: invalid email or password }
+            missingHeader:
+              value: { error: authorization header required }
+            badFormat:
+              value: { error: invalid authorization format }
+            invalidToken:
+              value: { error: invalid or malformed token }
+            expiredToken:
+              value: { error: token has expired }
+    Forbidden:
+      description: Caller does not own the target account.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: { error: access forbidden }
+    NotFound:
+      description: Account not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: { error: account not found }
+    Conflict:
+      description: Email already in use.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: { error: email is already in use }
+    InternalError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: { error: internal server error }
+
+security:
+  - bearerAuth: []
