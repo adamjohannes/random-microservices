@@ -4,7 +4,8 @@ from typing import Optional
 from uuid import UUID
 
 from src.course.domain.chapter_body import ChapterBody
-from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, ResourceStateError
+from src.course.domain.exceptions import AlreadyArchivedError, NotArchivedError, ArchivedChapterError, \
+    ArchivedChapterError
 from src.course.domain.title import Title
 
 
@@ -38,7 +39,7 @@ class CourseChapter:
             title: The new validated title.
 
         Raises:
-            ResourceStateError: If the chapter is archived.
+            ArchivedChapterError: If the chapter is archived.
         """
         self._ensure_modifiable()
 
@@ -53,7 +54,7 @@ class CourseChapter:
             body: The new validated body content.
 
         Raises:
-            ResourceStateError: If the chapter is archived.
+            ArchivedChapterError: If the chapter is archived.
         """
         self._ensure_modifiable()
 
@@ -94,4 +95,4 @@ class CourseChapter:
     def _ensure_modifiable(self) -> None:
         """Checks if the chapter has not been archived yet, and therefore is modifiable."""
         if self.is_archived:
-            raise ResourceStateError("cannot modify an archived chapter")
+            raise ArchivedChapterError()

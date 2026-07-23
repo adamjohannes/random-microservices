@@ -173,7 +173,7 @@ class Course:
         Raises:
             NotCourseAuthorError: If actor_id is not the course author.
             ArchivedCourseError: If the course is archived.
-            ResourceStateError: If the chapter is archived.
+            ArchivedChapterError: If the chapter is archived.
             ChapterNotFoundError: If no chapter with chapter_id exists.
             InvalidTitleLength: If title_str fails Title validation.
             InvalidChapterBodyLength: If body_str fails ChapterBody validation.

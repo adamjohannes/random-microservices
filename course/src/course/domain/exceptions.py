@@ -37,8 +37,12 @@ class AuthorCannotBeAssigneeError(ResourceStateError):
     def __init__(self, message: str = "author cannot be assigned to their own course") -> None:
         super().__init__(message)
 
-class ArchivedCourseError(DomainError):
+class ArchivedCourseError(ResourceStateError):
     def __init__(self, message: str = "cannot modify an archived course") -> None:
+        super().__init__(message)
+
+class ArchivedChapterError(ResourceStateError):
+    def __init__(self, message: str = "cannot modify an archived chapter") -> None:
         super().__init__(message)
 
 class AlreadyArchivedError(ResourceStateError):
