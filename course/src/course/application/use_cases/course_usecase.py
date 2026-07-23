@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from src.course.application.ports.course_repository import CourseRepository
@@ -93,7 +94,7 @@ class CourseUseCase:
         return chapter
 
     async def update_chapter(
-        self, actor_id: UUID, course_id: UUID, chapter_id: UUID, title: str, body: str
+            self, actor_id: UUID, course_id: UUID, chapter_id: UUID, title: str, body: str
     ) -> None:
         """
         Update the title and body of a chapter within a course.
@@ -237,3 +238,40 @@ class CourseUseCase:
 
         course.unenroll_user(user_id=user_id)
         await self._course_repo.save(course)
+
+    async def list_paginated_courses(self, limit: int = 10, offset: int = 0) -> List[Course]:
+        """
+        Retrieve a paginated list of all courses.
+
+        Args:
+            limit: The maximum number of courses to return.
+            offset: The offset of the first page to return.
+
+        Returns:
+            A paginated list of all courses.
+        """
+        return await self._course_repo.get_all(limit=limit, offset=offset)
+
+    async def list_authored_courses(self, author_id: UUID) -> List[Course]:
+        """
+        Retrieve all courses owned by a specific author.
+
+        Args:
+            author_id: The author to list courses from.
+
+        Returns:
+            A list of courses owned by a specific author.
+        """
+        return await self._course_repo.get_by_author_id(author_id)
+
+    async def list_enrolled_courses(self, assignee_id: UUID) -> List[Course]:
+        """
+        Retrieve all courses enrolled by a specific user.
+
+        Args:
+             assignee_id: The assignee to list courses from.
+
+        Returns:
+            A list of courses enrolled by a specific user.
+        """
+        return await self._course_repo.get_by_assignee_id(assignee_id)
