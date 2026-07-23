@@ -1,11 +1,6 @@
 from dataclasses import dataclass
 
-from src.course.domain.exceptions import DomainValidationError
-
-
-class InvalidCourseDescriptionLenght(DomainValidationError):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
+from src.course.domain.exceptions import InvalidCourseDescriptionLenght
 
 
 @dataclass(frozen=True)

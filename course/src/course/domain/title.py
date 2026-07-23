@@ -1,11 +1,6 @@
 from dataclasses import dataclass
 
-from src.course.domain.exceptions import DomainValidationError
-
-
-class InvalidTitleLength(DomainValidationError):
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
+from src.course.domain.exceptions import InvalidTitleLength
 
 
 @dataclass(frozen=True)
