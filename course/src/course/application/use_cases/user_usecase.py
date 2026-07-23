@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from src.course.domain.user import User
+from src.course.domain.user_email import UserEmail
+from src.course.domain.user_name import UserName
 from src.course.application.ports.user_repository import UserRepository
 
 
@@ -41,10 +43,10 @@ class UserUseCase:
         else:
             # Update user if something changed
             if user.name != name:
-                user.name = name
+                user.update_name(UserName(name))
                 changed = True
             if user.email != email:
-                user.email = email
+                user.update_email(UserEmail(email))
                 changed = True
 
         if changed:
