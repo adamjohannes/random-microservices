@@ -16,6 +16,6 @@ class CourseRepository(Protocol):
         """
         ...
 
-    async def get_by_id(self, user_id: UUID) -> Optional[Course]:
+    async def get_by_id(self, course_id: UUID) -> Optional[Course]:
         """Fetches a full course aggregate by its ID."""
         ...

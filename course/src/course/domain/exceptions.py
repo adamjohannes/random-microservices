@@ -111,4 +111,13 @@ class NotCourseAuthorError(DomainAuthorizationError):
 
 class ChapterNotFoundError(EntityNotFoundError):
     def __init__(self, chapter_id: str) -> None:
-        super().__init__(f"Chapter {chapter_id} not found in this course")
+        super().__init__(f"chapter '{chapter_id}' not found in this course")
+
+class UserNotFoundError(EntityNotFoundError):
+    def __init__(self, user_id: str) -> None:
+        super().__init__(f"user '{user_id}' not found")
+
+
+class CourseNotFoundError(EntityNotFoundError):
+    def __init__(self, course_id: str) -> None:
+        super().__init__(f"course '{course_id}' not found")
