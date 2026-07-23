@@ -23,7 +23,7 @@ class ChapterBody:
             raise InvalidChapterBodyError("chapter body be at least 30 characters long")
 
         if len(self.value) > 10000:
-            raise InvalidChapterBodyError("title cannot exceed 10000 characters")
+            raise InvalidChapterBodyError("chapter body cannot exceed 10000 characters")
 
     def __str__(self) -> str:
         return self.value
