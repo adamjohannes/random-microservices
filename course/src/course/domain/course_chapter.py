@@ -10,7 +10,20 @@ from src.course.domain.title import Title
 
 @dataclass
 class CourseChapter:
+    """
+    A course chapter represents an individual chapter of a course.
+
+    Attributes:
+        id: chapter id
+        index: chapter index inside the course
+        title: chapter title
+        body: chapter content
+        created_at: chapter creation time
+        updated_at: chapter update time
+        archived_at: chapter archive time
+    """
     id: UUID
+    index: int
     title: Title
     body: ChapterBody
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -18,18 +31,42 @@ class CourseChapter:
     archived_at: Optional[datetime] = None
 
     def update_title(self, title: Title) -> None:
+        """
+        Replace the chapter title.
+
+        Args:
+            title: The new validated title.
+
+        Raises:
+            ResourceStateError: If the chapter is archived.
+        """
         self._ensure_modifiable()
 
         self.title = title
         self.updated_at = datetime.now(timezone.utc)
 
     def update_body(self, body: ChapterBody) -> None:
+        """
+        Replace the chapter body.
+
+        Args:
+            body: The new validated body content.
+
+        Raises:
+            ResourceStateError: If the chapter is archived.
+        """
         self._ensure_modifiable()
 
         self.body = body
         self.updated_at = datetime.now(timezone.utc)
 
     def archive(self):
+        """
+        Archive the chapter, making it read-only.
+
+        Raises:
+            AlreadyArchivedError: If the chapter is already archived.
+        """
         if self.is_archived:
             raise AlreadyArchivedError()
 
@@ -38,6 +75,12 @@ class CourseChapter:
         self.updated_at = now
 
     def unarchive(self):
+        """
+        Restore an archived chapter to a modifiable state.
+
+        Raises:
+            NotArchivedError: If the chapter is not currently archived.
+        """
         if not self.is_archived:
             raise NotArchivedError()
 
@@ -49,5 +92,6 @@ class CourseChapter:
         return self.archived_at is not None
 
     def _ensure_modifiable(self) -> None:
+        """Checks if the chapter has not been archived yet, and therefore is modifiable."""
         if self.is_archived:
             raise ResourceStateError("cannot modify an archived chapter")
