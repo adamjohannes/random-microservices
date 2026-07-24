@@ -2,10 +2,11 @@ from datetime import datetime
 from uuid import UUID
 from sqlalchemy import String, ForeignKey, DateTime, Integer, Table, Column
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import List, Optional
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
@@ -38,7 +39,7 @@ class CourseChapterModel(Base):
     body: Mapped[str] = mapped_column(String(10000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    archived_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), null=True)
+    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class CourseModel(Base):
     __tablename__ = "courses"
@@ -49,7 +50,7 @@ class CourseModel(Base):
     description: Mapped[str] = mapped_column(String(2000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    archived_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), null=True)
+    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     author: Mapped[UserModel] = relationship(lazy="joined")
     chapters: Mapped[List[CourseChapterModel]] = relationship(
