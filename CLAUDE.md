@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository structure
 
-Monorepo with five services, a message broker, and a shared Bruno API collection:
+Monorepo with five services, a Vue frontend, a message broker, and a shared Bruno API collection:
 
 ```
 account/       Go 1.x      — Gin + GORM + PostgreSQL          — port 8080
 course/        Python 3.13 — FastAPI + SQLAlchemy async + PG   — port 8081
 connections/   Java 21     — Spring Boot 3 + Neo4j             — port 8082
 notifications/ Haskell     — servant + amqp + smtp-mail        — port 8083
+web/           Vue 3       — Vite + Pinia + Tailwind CSS       — port 5173 (dev)
 bruno/         Bruno API collections (account/, course/, connections/, notifications/)
 ```
 
@@ -65,6 +66,23 @@ cd connections
 ./gradlew test            # all tests (Mockito mocks only — no container needed)
 ./gradlew bootJar         # build fat JAR to build/libs/
 ```
+
+### web (Vue 3/Vite)
+
+```sh
+cd web
+npm install
+npm run dev      # Vite dev server on http://localhost:5173 (proxies API calls to backend services)
+npm run build    # production build to web/dist/ (runs vue-tsc then vite build)
+npm run preview  # preview production build locally
+```
+
+The dev proxy rewrites:
+- `/api/account/*` → `http://localhost:8080/api/v1/accounts/*`
+- `/api/course/*`  → `http://localhost:8081/*`
+- `/api/connections/*` → `http://localhost:8082/*`
+
+All four backend services must be running for the full feature set. Auth store persists the JWT to `localStorage` under key `access_token` and rehydrates on page load.
 
 ### notifications (Haskell/cabal)
 
