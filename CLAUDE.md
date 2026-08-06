@@ -4,16 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository structure
 
-Monorepo with four services and a shared Bruno API collection:
+Monorepo with five services, a message broker, and a shared Bruno API collection:
 
 ```
-account/      Go 1.x    — Gin + GORM + PostgreSQL   — port 8080
-course/       Python 3.13 — FastAPI + SQLAlchemy async + PostgreSQL — port 8081
-connections/  Java 21   — Spring Boot 3 + Neo4j     — port 8082
-bruno/        Bruno API collections (account/, course/, connections/)
+account/       Go 1.x      — Gin + GORM + PostgreSQL          — port 8080
+course/        Python 3.13 — FastAPI + SQLAlchemy async + PG   — port 8081
+connections/   Java 21     — Spring Boot 3 + Neo4j             — port 8082
+notifications/ Haskell     — servant + amqp + smtp-mail        — port 8083
+bruno/         Bruno API collections (account/, course/, connections/, notifications/)
 ```
 
-A planned `notifications/` Haskell service is next.
+All four services publish/consume domain events via **RabbitMQ** (topic exchange `domain_events`). Each service's `docker-compose.yaml` includes a `rabbitmq` service.
 
 ## Git conventions
 
@@ -65,6 +66,32 @@ cd connections
 ./gradlew bootJar         # build fat JAR to build/libs/
 ```
 
+### notifications (Haskell/cabal)
+
+```sh
+cd notifications
+cabal build                    # compile
+cabal test                     # unit tests (pure — no broker or SMTP needed)
+cabal run notifications        # run (needs SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM_ADDRESS)
+docker compose up              # starts rabbitmq + mailhog (port 8025) + notifications
+```
+
+Environment variables:
+
+| Var | Required | Default |
+|---|---|---|
+| `AMQP_HOST` | no | `localhost` |
+| `AMQP_USER` | no | `guest` |
+| `AMQP_PASS` | no | `guest` |
+| `SMTP_HOST` | **yes** | — |
+| `SMTP_PORT` | no | `587` |
+| `SMTP_USER` | **yes** | — |
+| `SMTP_PASS` | **yes** | — |
+| `SMTP_FROM_ADDRESS` | **yes** | — |
+| `PORT` | no | `8083` |
+
+MailHog is included in `docker-compose.yaml` for local email capture (`localhost:8025`). For production replace `SMTP_*` vars with real values.
+
 ### Docker Compose (per service)
 
 Each service has its own `docker-compose.yaml`. Run from the service directory:
@@ -82,6 +109,7 @@ The `course` compose runs a `migrate` service (alembic) before starting the app.
 bru run bruno/account --env local
 bru run bruno/course --env local
 bru run bruno/connections --env local
+bru run bruno/notifications --env local
 ```
 
 Or open each `bruno/<service>/` folder in the Bruno desktop app with the `local` environment.
@@ -90,15 +118,28 @@ Or open each `bruno/<service>/` folder in the Bruno desktop app with the `local`
 
 All three services implement **hexagonal (ports-and-adapters)** architecture. The domain layer has zero knowledge of HTTP, databases, or frameworks. The direction of naming differs slightly by language but the concepts are consistent:
 
-| Concept | account (Go) | course (Python) | connections (Java) |
-|---|---|---|---|
-| Domain entities | `internal/domain/` | `src/course/domain/` | `domain/model/` |
-| Port interfaces | `internal/domain/` (same package) | `application/ports/` | `application/port/in/` + `application/port/out/` |
-| Use cases | `internal/usecase/` | `application/use_cases/` | `application/usecase/` |
-| HTTP adapter | `internal/delivery/http/` | `adapters/driving/http/` | `adapter/in/http/` |
-| DB adapter | `internal/adapter/storage/postgres/` | `adapters/driven/storage/postgres/` | `adapter/out/neo4j/` |
+| Concept | account (Go) | course (Python) | connections (Java) | notifications (Haskell) |
+|---|---|---|---|---|
+| Domain entities | `internal/domain/` | `src/course/domain/` | `domain/model/` | `src/Notification/Domain/` |
+| Port interfaces | `internal/domain/` (same package) | `application/ports/` | `application/port/in/` + `application/port/out/` | `src/Notification/Ports/` |
+| Use cases | `internal/usecase/` | `application/use_cases/` | `application/usecase/` | `Domain/Dispatch.hs` (pure fn) |
+| HTTP adapter | `internal/delivery/http/` | `adapters/driving/http/` | `adapter/in/http/` | `Health.hs` (health only) |
+| Broker/email adapter | `adapter/messaging/rabbitmq/` | `adapters/driven/messaging/` | `adapter/out/messaging/` | `Adapters/AmqpConsumer.hs` + `Adapters/SmtpEmail.hs` |
 
 **Port interfaces are owned by the domain/application layer, not by adapters.** In Go, `AccountRepository` and `TokenService` live in `domain/`. In Python, `CourseRepository` and `UserRepository` are `Protocol` classes in `application/ports/`. In Java, outbound ports live in `application/port/out/`.
+
+### Event publishing (RabbitMQ)
+
+Topic exchange `domain_events`. Each service publishes fire-and-forget (failures are logged, not propagated). The notifications service subscribes and sends emails.
+
+| Routing key | Publisher | Trigger |
+|---|---|---|
+| `account.user_registered` | account | After `repo.Create` succeeds in `RegisterAccount` |
+| `course.user_enrolled` | course | After `course_repo.save` in `enroll_user_in_course` |
+| `connections.request_received` | connections | After `connectionRepository.save` in `sendRequest` |
+| `connections.request_accepted` | connections | After `connectionRepository.save` in `respondToRequest` (accept=true) |
+
+AMQP env vars (`AMQP_HOST`, `AMQP_USER`, `AMQP_PASS`) have safe defaults (`localhost`, `guest`, `guest`) so all services start without a broker — publishing silently degrades to a noop.
 
 ### Course as aggregate root
 

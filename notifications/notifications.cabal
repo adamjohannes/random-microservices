@@ -1,0 +1,57 @@
+cabal-version: 3.0
+name:          notifications
+version:       0.1.0.0
+build-type:    Simple
+
+common shared
+  ghc-options:      -Wall -Wunused-imports
+  default-language: GHC2021
+  build-depends:
+      base ^>=4.18
+    , aeson >= 2.0
+    , text
+    , bytestring
+    , time
+
+library
+  import:          shared
+  hs-source-dirs:  src
+  exposed-modules:
+      Notification.Domain.Event
+    , Notification.Domain.Email
+    , Notification.Domain.Dispatch
+    , Notification.Ports.EmailSender
+    , Notification.Adapters.SmtpEmail
+    , Notification.Adapters.AmqpConsumer
+    , Notification.Config
+    , Notification.Health
+  build-depends:
+      amqp >= 0.22
+    , mime-mail >= 0.5
+    , smtp-mail >= 0.3
+    , servant >= 0.20
+    , servant-server >= 0.20
+    , warp >= 3.3
+    , mtl
+    , network
+
+executable notifications
+  import:          shared
+  main-is:         Main.hs
+  hs-source-dirs:  app
+  build-depends:   notifications
+
+test-suite notifications-test
+  import:          shared
+  type:            exitcode-stdio-1.0
+  main-is:         Spec.hs
+  hs-source-dirs:  test
+  other-modules:
+      Domain.DispatchSpec
+    , Domain.EventSpec
+    , Adapters.SmtpEmailSpec
+  build-depends:
+      notifications
+    , hspec >= 2.11
+    , QuickCheck >= 2.14
+    , transformers
