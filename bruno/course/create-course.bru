@@ -1,0 +1,28 @@
+meta {
+  name: Create Course
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/courses
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Introduction to Testing",
+    "description": "A thorough introduction to software testing practices and tools used in modern development."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("courseId", res.body.id);
+  }
+}

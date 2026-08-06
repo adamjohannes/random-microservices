@@ -1,0 +1,23 @@
+meta {
+  name: Sync User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "account_id": "{{accountId}}",
+    "name": "Adam Johannes",
+    "email": "adam@example.com"
+  }
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Update Chapter
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/courses/{{courseId}}/chapters/{{chapterId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Chapter One: Getting Started (Revised)",
+    "body": "This revised chapter introduces the fundamental concepts you need to understand before diving into more advanced topics in software testing."
+  }
+}

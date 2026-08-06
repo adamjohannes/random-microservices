@@ -1,0 +1,21 @@
+meta {
+  name: Sync Enrollment (M2M)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/courses/{{courseId}}/enrollment
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{m2mToken}}
+}
+
+body:json {
+  {
+    "userId": "{{accountId}}"
+  }
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Archive Chapter
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/courses/{{courseId}}/chapters/{{chapterId}}/archive
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

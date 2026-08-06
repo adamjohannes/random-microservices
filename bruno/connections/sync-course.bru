@@ -1,0 +1,22 @@
+meta {
+  name: Sync Course (M2M)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/courses
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{m2mToken}}
+}
+
+body:json {
+  {
+    "courseId": "{{courseId}}",
+    "title": "Introduction to Testing"
+  }
+}

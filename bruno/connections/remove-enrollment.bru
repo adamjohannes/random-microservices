@@ -1,0 +1,15 @@
+meta {
+  name: Remove Enrollment (M2M)
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/courses/{{courseId}}/enrollment/{{accountId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{m2mToken}}
+}

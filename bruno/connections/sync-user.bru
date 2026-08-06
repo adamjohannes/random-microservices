@@ -1,0 +1,23 @@
+meta {
+  name: Sync User (M2M)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{m2mToken}}
+}
+
+body:json {
+  {
+    "accountId": "{{accountId}}",
+    "name": "Adam Johannes",
+    "email": "adam@example.com"
+  }
+}

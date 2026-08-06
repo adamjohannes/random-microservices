@@ -1,0 +1,15 @@
+meta {
+  name: Unarchive Chapter
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/courses/{{courseId}}/chapters/{{chapterId}}/unarchive
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

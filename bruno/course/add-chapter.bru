@@ -1,0 +1,28 @@
+meta {
+  name: Add Chapter
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/courses/{{courseId}}/chapters
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Chapter One: Getting Started",
+    "body": "This chapter introduces the fundamental concepts you need to understand before diving into more advanced topics in software testing."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("chapterId", res.body.id);
+  }
+}

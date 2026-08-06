@@ -1,0 +1,15 @@
+meta {
+  name: List Connections' Courses
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/connections/courses
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Reject Connection Request
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/connections/{{connectionId}}/reject
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
