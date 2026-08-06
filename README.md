@@ -1,4 +1,4 @@
-# Microservices
+# random-microsservices
 
 A polyglot microservices monorepo built as a proof of concept: the choice of language or framework is not a blocker for spinning up a set of well-structured, interoperating services. Each service is independently deployable, uses the same architectural pattern (hexagonal/ports-and-adapters), and communicates over standard HTTP and AMQP interfaces.
 
