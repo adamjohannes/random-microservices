@@ -22,10 +22,4 @@ export M2M_SECRET=your-m2m-secret
 ./setup.sh
 ```
 
-`setup.sh` validates dependencies and required environment variables, then starts each service via `docker compose`.
-
-For the frontend:
-
-```sh
-cd web && npm install && npm run dev
-```
+`setup.sh` validates dependencies and required environment variables, creates a shared Docker network (`services_net`), then starts every service via `docker compose`. The web frontend is served by nginx at `http://localhost:5173` and proxies API requests to the backend containers over the shared network.

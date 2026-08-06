@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5173:80"
+    networks:
+      - services_net
+
+networks:
+  services_net:
+    external: true

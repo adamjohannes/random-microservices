@@ -48,6 +48,9 @@ services:
       AMQP_PASS: guest
     ports:
       - "8081:8080"
+    networks:
+      - default
+      - services_net
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -56,3 +59,7 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  services_net:
+    external: true

@@ -90,12 +90,21 @@ if (( PORT_CONFLICTS == 0 )); then
   ok "All ports are free"
 fi
 
+# ── shared Docker network ─────────────────────────────────────────────────────
+info "Ensuring shared Docker network 'services_net' exists…"
+if docker network inspect services_net &>/dev/null 2>&1; then
+  ok "services_net already exists"
+else
+  docker network create services_net
+  ok "services_net created"
+fi
+
 # ── boot services ─────────────────────────────────────────────────────────────
 echo ""
 info "Starting all services with docker compose…"
 echo ""
 
-SERVICES=(account course connections notifications)
+SERVICES=(account course connections notifications web)
 
 for svc in "${SERVICES[@]}"; do
   info "[$svc] docker compose up --build -d"
@@ -117,10 +126,10 @@ echo "  account       http://localhost:8080"
 echo "  course        http://localhost:8081"
 echo "  connections   http://localhost:8082"
 echo "  notifications http://localhost:8083/health"
-echo "  web (dev)     cd web && npm run dev  →  http://localhost:5173"
+echo "  web           http://localhost:5173"
 echo "  RabbitMQ UI   http://localhost:15672  (guest / guest)"
 echo "  MailHog UI    http://localhost:8025"
 echo "  Neo4j UI      http://localhost:7474"
 echo ""
 info "To tail logs: docker compose -f <service>/docker-compose.yaml logs -f"
-info "To stop all:  for s in account course connections notifications; do (cd \$s && docker compose down); done"
+info "To stop all:  for s in account course connections notifications web; do (cd \$s && docker compose down); done"
