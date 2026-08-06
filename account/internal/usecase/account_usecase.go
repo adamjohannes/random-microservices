@@ -3,16 +3,19 @@ package usecase
 import (
 	"account/internal/domain"
 	"context"
+	"encoding/json"
 	"errors"
+	"time"
 )
 
 type AccountUsecase struct {
-	repo         domain.AccountRepository
-	tokenService domain.TokenService
+	repo           domain.AccountRepository
+	tokenService   domain.TokenService
+	eventPublisher domain.EventPublisher
 }
 
-func NewAccountUsecase(repo domain.AccountRepository, tokenService domain.TokenService) *AccountUsecase {
-	return &AccountUsecase{repo: repo, tokenService: tokenService}
+func NewAccountUsecase(repo domain.AccountRepository, tokenService domain.TokenService, eventPublisher domain.EventPublisher) *AccountUsecase {
+	return &AccountUsecase{repo: repo, tokenService: tokenService, eventPublisher: eventPublisher}
 }
 
 // Authenticate verifies credentials and returns the account if valid
@@ -48,7 +51,29 @@ func (u *AccountUsecase) RegisterAccount(ctx context.Context, email, password, n
 		return nil, err
 	}
 
+	u.publishUserRegistered(ctx, account)
+
 	return account, nil
+}
+
+func (u *AccountUsecase) publishUserRegistered(ctx context.Context, account *domain.Account) {
+	payload, err := json.Marshal(struct {
+		EventType  string    `json:"event_type"`
+		OccurredAt time.Time `json:"occurred_at"`
+		AccountID  string    `json:"account_id"`
+		Name       string    `json:"name"`
+		Email      string    `json:"email"`
+	}{
+		EventType:  "account.user_registered",
+		OccurredAt: time.Now().UTC(),
+		AccountID:  account.ID.String(),
+		Name:       account.Name.String(),
+		Email:      account.Email.String(),
+	})
+	if err != nil {
+		return
+	}
+	_ = u.eventPublisher.Publish(ctx, "account.user_registered", payload)
 }
 
 // GetActiveAccount retrieves an Account active account from the database and fails if it has been soft deleted.

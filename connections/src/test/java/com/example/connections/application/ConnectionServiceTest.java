@@ -1,7 +1,9 @@
 package com.example.connections.application;
 
+import com.example.connections.adapter.out.messaging.EventPublisher;
 import com.example.connections.application.port.out.ConnectionRepository;
 import com.example.connections.application.port.out.UserRepository;
+import com.example.connections.application.usecase.ConnectionService;
 import com.example.connections.domain.exception.AuthorizationException;
 import com.example.connections.domain.exception.NotFoundException;
 import com.example.connections.domain.exception.StateException;
@@ -32,6 +34,9 @@ class ConnectionServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private EventPublisher eventPublisher;
+
     private ConnectionService service;
 
     private final UUID requesterId = UUID.randomUUID();
@@ -41,7 +46,7 @@ class ConnectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ConnectionService(connectionRepository, userRepository);
+        service = new ConnectionService(connectionRepository, userRepository, eventPublisher);
     }
 
     // ── sendRequest ──────────────────────────────────────────────────────────

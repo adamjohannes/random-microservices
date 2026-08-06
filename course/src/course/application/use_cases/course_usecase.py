@@ -1,7 +1,9 @@
 from typing import List
 from uuid import UUID
+from datetime import datetime, timezone
 
 from src.course.application.ports.course_repository import CourseRepository
+from src.course.application.ports.event_publisher import EventPublisher
 from src.course.application.ports.user_repository import UserRepository
 from src.course.domain.course import Course
 from src.course.domain.course_chapter import CourseChapter
@@ -17,9 +19,10 @@ class CourseUseCase:
     the result. Dependencies are injected via the constructor.
     """
 
-    def __init__(self, course_repo: CourseRepository, user_repo: UserRepository) -> None:
+    def __init__(self, course_repo: CourseRepository, user_repo: UserRepository, event_publisher: EventPublisher | None = None) -> None:
         self._course_repo = course_repo
         self._user_repo = user_repo
+        self._event_publisher = event_publisher
 
     async def create_course(self, actor_id: UUID, title: str, description: str) -> Course:
         """
@@ -221,6 +224,20 @@ class CourseUseCase:
 
         course.enroll_user(user_id=user_id)
         await self._course_repo.save(course)
+
+        if self._event_publisher is not None:
+            try:
+                await self._event_publisher.publish("course.user_enrolled", {
+                    "event_type": "course.user_enrolled",
+                    "occurred_at": datetime.now(timezone.utc).isoformat(),
+                    "user_id": str(user_id),
+                    "user_name": str(user.name),
+                    "user_email": str(user.email),
+                    "course_id": str(course_id),
+                    "course_title": str(course.title),
+                })
+            except Exception:
+                pass
 
     async def unenroll_user_from_course(self, user_id: UUID, course_id: UUID) -> None:
         """

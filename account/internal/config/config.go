@@ -22,6 +22,9 @@ type Config struct {
 	DatabaseUrl   string
 	JWTSecret     string
 	JWTExpiry     time.Duration
+	AmqpHost      string
+	AmqpUser      string
+	AmqpPass      string
 	LoggerOptions []zap.Option
 }
 
@@ -46,6 +49,9 @@ func Load() (*Config, error) {
 		DatabaseUrl:   os.Getenv("DATABASE_URL"),
 		JWTSecret:     os.Getenv("JWT_SECRET"),
 		JWTExpiry:     jwtExpiry,
+		AmqpHost:      getEnvOrDefault("AMQP_HOST", "localhost"),
+		AmqpUser:      getEnvOrDefault("AMQP_USER", "guest"),
+		AmqpPass:      getEnvOrDefault("AMQP_PASS", "guest"),
 		LoggerOptions: loggerOptions,
 	}
 

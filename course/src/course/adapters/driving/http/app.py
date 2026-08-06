@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from src.course.adapters.driving.http.exception_handlers import (
@@ -6,8 +8,10 @@ from src.course.adapters.driving.http.exception_handlers import (
     not_found_handler,
     resource_state_handler,
 )
+from src.course.adapters.driving.http.dependencies import init_event_publisher
 from src.course.adapters.driving.http.routers.courses import router as courses_router
 from src.course.adapters.driving.http.routers.users import router as users_router
+from src.course.config import Config
 from src.course.domain.exceptions import (
     DomainAuthorizationError,
     DomainValidationError,
@@ -17,7 +21,12 @@ from src.course.domain.exceptions import (
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Course Service")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await init_event_publisher(Config())
+        yield
+
+    app = FastAPI(title="Course Service", lifespan=lifespan)
 
     app.add_exception_handler(DomainValidationError, domain_validation_handler)
     app.add_exception_handler(ResourceStateError, resource_state_handler)

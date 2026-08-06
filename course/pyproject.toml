@@ -5,6 +5,7 @@ description = "Course service."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aio-pika>=9.0",
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
     "fastapi>=0.139.2",

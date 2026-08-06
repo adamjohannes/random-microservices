@@ -1,10 +1,12 @@
 package main
 
 import (
+	"account/internal/adapter/messaging/rabbitmq"
 	"account/internal/adapter/storage/postgres"
 	"account/internal/auth"
 	"account/internal/config"
 	"account/internal/delivery/http"
+	"account/internal/domain"
 	"account/internal/usecase"
 	"fmt"
 
@@ -43,7 +45,17 @@ func main() {
 
 	accountRepo := postgres.NewAccountRepository(db)
 	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.JWTExpiry)
-	accountService := usecase.NewAccountUsecase(accountRepo, jwtService)
+
+	var eventPublisher domain.EventPublisher
+	amqpPublisher, err := rabbitmq.NewPublisher(cfg.AmqpHost, cfg.AmqpUser, cfg.AmqpPass)
+	if err != nil {
+		logger.Warn("RabbitMQ unavailable, events will not be published", zap.Error(err))
+		eventPublisher = rabbitmq.NoopPublisher{}
+	} else {
+		eventPublisher = amqpPublisher
+	}
+
+	accountService := usecase.NewAccountUsecase(accountRepo, jwtService, eventPublisher)
 	accountHandler := http.NewAccountHandler(accountService)
 
 	authMiddleware := http.AuthMiddleware(jwtService)

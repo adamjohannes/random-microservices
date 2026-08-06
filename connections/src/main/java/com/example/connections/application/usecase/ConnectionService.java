@@ -1,5 +1,8 @@
 package com.example.connections.application.usecase;
 
+import com.example.connections.adapter.out.messaging.EventPublisher;
+import com.example.connections.adapter.out.messaging.events.RequestAcceptedEvent;
+import com.example.connections.adapter.out.messaging.events.RequestReceivedEvent;
 import com.example.connections.domain.exception.AuthorizationException;
 import com.example.connections.domain.exception.NotFoundException;
 import com.example.connections.domain.exception.StateException;
@@ -22,10 +25,14 @@ public class ConnectionService implements ConnectionUseCase {
 
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
+    private final EventPublisher eventPublisher;
 
-    public ConnectionService(ConnectionRepository connectionRepository, UserRepository userRepository) {
+    public ConnectionService(ConnectionRepository connectionRepository,
+                             UserRepository userRepository,
+                             EventPublisher eventPublisher) {
         this.connectionRepository = connectionRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -44,12 +51,23 @@ public class ConnectionService implements ConnectionUseCase {
         connection.setRequester(requester);
         connection.setAddressee(addressee);
 
+        Connection saved;
         try {
-            return connectionRepository.save(connection);
+            saved = connectionRepository.save(connection);
         } catch (DataIntegrityViolationException e) {
-            return connectionRepository.findById(connection.getId())
+            saved = connectionRepository.findById(connection.getId())
                     .orElseThrow(() -> new StateException("Connection conflict but record not found"));
         }
+
+        eventPublisher.publish("connections.request_received", new RequestReceivedEvent(
+                "connections.request_received",
+                Instant.now().toString(),
+                saved.getId(),
+                requesterId.toString(), requester.getName(),
+                addresseeId.toString(), addressee.getName(), addressee.getEmail()
+        ));
+
+        return saved;
     }
 
     @Override
@@ -69,7 +87,22 @@ public class ConnectionService implements ConnectionUseCase {
         connection.setStatus(accept ? ConnectionStatus.ACCEPTED : ConnectionStatus.REJECTED);
         connection.setUpdatedAt(Instant.now().toString());
 
-        return connectionRepository.save(connection);
+        Connection saved = connectionRepository.save(connection);
+
+        if (accept) {
+            eventPublisher.publish("connections.request_accepted", new RequestAcceptedEvent(
+                    "connections.request_accepted",
+                    Instant.now().toString(),
+                    saved.getId(),
+                    connection.getRequester().getId().toString(),
+                    connection.getRequester().getName(),
+                    connection.getRequester().getEmail(),
+                    connection.getAddressee().getId().toString(),
+                    connection.getAddressee().getName()
+            ));
+        }
+
+        return saved;
     }
 
     @Override

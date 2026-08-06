@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"account/internal/adapter/messaging/rabbitmq"
 	"account/internal/domain"
 	"account/internal/usecase"
 	"context"
@@ -71,7 +72,7 @@ func TestRegisterAccount(t *testing.T) {
 					return tt.createFn(ctx, account)
 				},
 			}
-			uc := usecase.NewAccountUsecase(repo, &mockTokenService{})
+			uc := usecase.NewAccountUsecase(repo, &mockTokenService{}, rabbitmq.NoopPublisher{})
 
 			account, err := uc.RegisterAccount(context.Background(), tt.email, tt.password, tt.userName)
 
@@ -151,7 +152,7 @@ func TestAuthenticate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &mockAccountRepo{GetByEmailFn: tt.getByEmailFn}
 			ts := &mockTokenService{GenerateFn: tt.generateFn}
-			uc := usecase.NewAccountUsecase(repo, ts)
+			uc := usecase.NewAccountUsecase(repo, ts, rabbitmq.NoopPublisher{})
 
 			account, token, err := uc.Authenticate(context.Background(), validEmail, tt.password)
 
@@ -212,7 +213,7 @@ func TestGetActiveAccount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &mockAccountRepo{GetByIDFn: tt.getByIDFn}
-			uc := usecase.NewAccountUsecase(repo, &mockTokenService{})
+			uc := usecase.NewAccountUsecase(repo, &mockTokenService{}, rabbitmq.NoopPublisher{})
 
 			account, err := uc.GetActiveAccount(context.Background(), tt.id)
 
@@ -281,7 +282,7 @@ func TestUpdateAccount(t *testing.T) {
 					return nil
 				},
 			}
-			uc := usecase.NewAccountUsecase(repo, &mockTokenService{})
+			uc := usecase.NewAccountUsecase(repo, &mockTokenService{}, rabbitmq.NoopPublisher{})
 
 			err := uc.UpdateAccount(context.Background(), tt.id, tt.newName, tt.newEmail)
 
@@ -337,7 +338,7 @@ func TestChangePassword(t *testing.T) {
 					return nil
 				},
 			}
-			uc := usecase.NewAccountUsecase(repo, &mockTokenService{})
+			uc := usecase.NewAccountUsecase(repo, &mockTokenService{}, rabbitmq.NoopPublisher{})
 
 			err := uc.ChangePassword(context.Background(), domain.NewAccountID().String(), tt.oldPassword, tt.newPassword)
 
