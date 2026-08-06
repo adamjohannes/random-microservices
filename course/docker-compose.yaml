@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: course_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d course_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@db:5432/course_db
+    command: alembic upgrade head
+    depends_on:
+      db:
+        condition: service_healthy
+
+  course:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@db:5432/course_db
+      JWT_SECRET: change-me-in-production
+      PORT: "8080"
+      ENVIRONMENT: production
+    ports:
+      - "8081:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

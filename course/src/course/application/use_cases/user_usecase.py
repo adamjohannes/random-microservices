@@ -42,10 +42,10 @@ class UserUseCase:
             changed = True
         else:
             # Update user if something changed
-            if user.name != name:
+            if str(user.name) != name:
                 user.update_name(UserName(name))
                 changed = True
-            if user.email != email:
+            if str(user.email) != email:
                 user.update_email(UserEmail(email))
                 changed = True
 
