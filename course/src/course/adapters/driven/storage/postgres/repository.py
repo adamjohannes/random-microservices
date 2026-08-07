@@ -81,11 +81,16 @@ class PostgresCourseRepository(CourseRepository):
             new_chapter_models.append(c_model)
         model.chapters = new_chapter_models
 
-        # Update Assignees
-        assignees = await self._session.execute(
-            select(UserModel).where(UserModel.id.in_(course.assignee_ids))
-        )
-        model.assignees = list(assignees.scalars().all())
+        # Update Assignees — load existing list async first to avoid sync lazy-load
+        if not is_new:
+            await model.awaitable_attrs.assignees
+        if course.assignee_ids:
+            assignees = await self._session.execute(
+                select(UserModel).where(UserModel.id.in_(course.assignee_ids))
+            )
+            model.assignees = list(assignees.scalars().all())
+        else:
+            model.assignees = []
 
         await self._session.flush()
 
