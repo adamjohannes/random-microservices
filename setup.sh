@@ -94,6 +94,8 @@ echo ""
 info "Starting all services with docker compose…"
 echo ""
 
+# account starts first — it owns the shared RabbitMQ broker
+# other services connect to account-rabbitmq-1 via services_net
 SERVICES=(account course connections notifications web)
 
 for svc in "${SERVICES[@]}"; do
@@ -105,6 +107,13 @@ for svc in "${SERVICES[@]}"; do
   ok "[$svc] started"
   echo ""
 done
+
+# account must reconnect AFTER RabbitMQ is ready (compose brings rabbit up
+# then account in the same run, but if rabbit was already running and got
+# recreated, account needs a restart to pick up the new connection)
+info "Restarting account to ensure fresh AMQP connection…"
+(cd "$ROOT/account" && docker compose restart account)
+ok "account reconnected"
 
 # ── summary ───────────────────────────────────────────────────────────────────
 echo ""
