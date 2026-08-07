@@ -46,24 +46,14 @@ check_cmd docker "install Docker Desktop from https://docker.com"
 check_docker_running
 check_docker_compose_v2
 
-# ── required environment variables ───────────────────────────────────────────
-info "Checking required environment variables…"
-
-check_env() {
-  local var="$1"
-  if [[ -z "${!var:-}" ]]; then
-    err "$var is not set — export it before running this script"
-  else
-    ok "$var is set"
-  fi
-}
-
-check_env JWT_SECRET
-check_env M2M_SECRET
+# ── environment variable notes ────────────────────────────────────────────────
+info "Checking environment variables…"
+ok "JWT_SECRET and M2M_SECRET use 'change-me-in-production' for local dev (hardcoded in compose files)"
+warn "Set JWT_SECRET and M2M_SECRET to strong secrets before deploying to production"
 
 # ── warn about hardcoded secrets in compose files ────────────────────────────
 info "Checking for hardcoded secrets in docker-compose files…"
-for f in "$ROOT"/account/docker-compose.yaml "$ROOT"/course/docker-compose.yaml; do
+for f in "$ROOT"/account/docker-compose.yaml "$ROOT"/course/docker-compose.yaml "$ROOT"/connections/docker-compose.yaml; do
   if grep -q "change-me-in-production" "$f" 2>/dev/null; then
     warn "$(basename "$(dirname "$f")")/docker-compose.yaml contains JWT_SECRET: change-me-in-production — safe for local dev only"
   fi
