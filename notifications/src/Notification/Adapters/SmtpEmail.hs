@@ -8,8 +8,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
-import Network.Mail.Mime (Address (..), Mail, plainPart, simpleMail')
-import Network.Mail.SMTP (sendMailWithLoginTLS)
+import Network.Mail.Mime (Address (..), Mail, simpleMail')
+import Network.Mail.SMTP (sendMail, sendMailWithLoginTLS)
 import Notification.Config (SmtpConfig (..))
 import Notification.Domain.Email (EmailMessage (..))
 import Notification.Ports.EmailSender (EmailSender (..))
@@ -30,12 +30,13 @@ instance EmailSender SmtpEmailM where
                  (Address (Just (smtpFromName cfg)) (smtpFromAddr cfg))
                  (emSubject msg)
                  (TL.fromStrict (emBody msg))
-    result <- liftIO $ try @SomeException $
-      sendMailWithLoginTLS
-        (smtpHost cfg)
-        (T.unpack $ smtpUser cfg)
-        (T.unpack $ smtpPass cfg)
-        mail
+        host = smtpHost cfg
+        user = T.unpack (smtpUser cfg)
+        pass = T.unpack (smtpPass cfg)
+        send = if null user
+                 then sendMail host mail
+                 else sendMailWithLoginTLS host user pass mail
+    result <- liftIO $ try @SomeException send
     pure $ case result of
       Left err -> Left (show err)
       Right _  -> Right ()
