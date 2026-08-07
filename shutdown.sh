@@ -22,18 +22,17 @@ for svc in "${SERVICES[@]}"; do
     continue
   fi
   info "[$svc] docker compose down"
-  (cd "$dir" && docker compose down) && ok "[$svc] stopped" || warn "[$svc] stop returned non-zero (may already be down)"
+  (cd "$dir" && docker compose down --remove-orphans) && ok "[$svc] stopped" || warn "[$svc] stop returned non-zero (may already be down)"
   echo ""
 done
 
-# Remove the shared network if it exists and is now empty
+# Remove the shared network (force-disconnect any remaining containers first)
 if docker network inspect services_net &>/dev/null 2>&1; then
-  CONTAINERS=$(docker network inspect services_net --format '{{len .Containers}}' 2>/dev/null || echo "0")
-  if [ "$CONTAINERS" -eq 0 ]; then
-    docker network rm services_net &>/dev/null && ok "services_net network removed"
-  else
-    warn "services_net still has $CONTAINERS container(s) attached — not removed"
-  fi
+  CONTAINERS=$(docker network inspect services_net --format '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null)
+  for cname in $CONTAINERS; do
+    docker network disconnect -f services_net "$cname" &>/dev/null || true
+  done
+  docker network rm services_net &>/dev/null && ok "services_net network removed" || warn "could not remove services_net"
 fi
 
 echo ""
