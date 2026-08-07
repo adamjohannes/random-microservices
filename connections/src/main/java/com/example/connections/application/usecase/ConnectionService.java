@@ -8,7 +8,6 @@ import com.example.connections.domain.exception.NotFoundException;
 import com.example.connections.domain.exception.StateException;
 import com.example.connections.domain.model.Connection;
 import com.example.connections.domain.model.ConnectionStatus;
-import com.example.connections.domain.model.User;
 import com.example.connections.application.port.in.ConnectionUseCase;
 import com.example.connections.application.port.out.ConnectionRepository;
 import com.example.connections.application.port.out.UserRepository;
@@ -107,11 +106,8 @@ public class ConnectionService implements ConnectionUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> listConnections(UUID userId) {
-        List<Connection> connections = connectionRepository.findAcceptedByUserId(userId);
-        return connections.stream()
-                .map(c -> c.getRequester().getId().equals(userId) ? c.getAddressee() : c.getRequester())
-                .toList();
+    public List<Connection> listAllConnections(UUID userId) {
+        return connectionRepository.findAllByUserId(userId);
     }
 
     @Override

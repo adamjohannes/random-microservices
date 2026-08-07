@@ -15,5 +15,7 @@ public interface ConnectionRepository {
 
     List<Connection> findAcceptedByUserId(UUID userId);
 
+    List<Connection> findAllByUserId(UUID userId);
+
     List<CourseProjection> findConnectionsCourses(UUID userId);
 }

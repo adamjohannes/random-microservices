@@ -10,6 +10,14 @@ import java.util.UUID;
 public interface Neo4jConnectionDelegate extends Neo4jRepository<Connection, String> {
 
     @Query("""
+            MATCH (me:User {id: $userId})-[:SENT_REQUEST|RECEIVED_REQUEST]-(c:Connection)
+                  -[:SENT_REQUEST|RECEIVED_REQUEST]-(other:User)
+            WHERE me.id <> other.id
+            RETURN c
+            """)
+    List<Connection> findAllByUserId(UUID userId);
+
+    @Query("""
             MATCH (me:User {id: $userId})-[:SENT_REQUEST|RECEIVED_REQUEST]-(c:Connection {status:'ACCEPTED'})
                   -[:SENT_REQUEST|RECEIVED_REQUEST]-(friend:User)
             WHERE me.id <> friend.id

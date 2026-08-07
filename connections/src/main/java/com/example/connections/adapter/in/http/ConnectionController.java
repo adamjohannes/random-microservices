@@ -54,9 +54,9 @@ public class ConnectionController {
     }
 
     @GetMapping
-    List<UserResponse> listConnections(@AuthenticationPrincipal UUID userId) {
-        return connectionUseCase.listConnections(userId).stream()
-            .map(this::toUserResponse)
+    List<ConnectionResponse> listConnections(@AuthenticationPrincipal UUID userId) {
+        return connectionUseCase.listAllConnections(userId).stream()
+            .map(this::toResponse)
             .toList();
     }
 

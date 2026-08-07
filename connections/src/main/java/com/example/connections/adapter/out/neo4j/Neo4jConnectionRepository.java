@@ -34,6 +34,11 @@ public class Neo4jConnectionRepository implements ConnectionRepository {
     }
 
     @Override
+    public List<Connection> findAllByUserId(UUID userId) {
+        return delegate.findAllByUserId(userId);
+    }
+
+    @Override
     public List<CourseProjection> findConnectionsCourses(UUID userId) {
         return delegate.findConnectionsCourses(userId).stream()
                 .map(r -> new CourseProjection(r.courseId, r.courseTitle, r.enrolledUserId, r.enrolledUserName))
