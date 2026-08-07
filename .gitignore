@@ -1,3 +1,14 @@
 .idea
 
 .env
+
+# Playwright MCP
+.playwright-mcp/
+
+# Gradle
+.gradle/
+bin/
+build/
+
+# Python
+__pycache__/
