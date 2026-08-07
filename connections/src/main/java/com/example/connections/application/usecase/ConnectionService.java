@@ -8,6 +8,7 @@ import com.example.connections.domain.exception.NotFoundException;
 import com.example.connections.domain.exception.StateException;
 import com.example.connections.domain.model.Connection;
 import com.example.connections.domain.model.ConnectionStatus;
+import com.example.connections.domain.model.User;
 import com.example.connections.application.port.in.ConnectionUseCase;
 import com.example.connections.application.port.out.ConnectionRepository;
 import com.example.connections.application.port.out.UserRepository;
