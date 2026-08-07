@@ -21,7 +21,7 @@ queueBindings =
 
 startConsuming :: AmqpConfig -> (EventPayload -> IO ()) -> IO Connection
 startConsuming cfg handler = do
-  conn <- openConnection (amqpHost cfg) "/" (T.unpack $ amqpUser cfg) (T.unpack $ amqpPass cfg)
+  conn <- openConnection (amqpHost cfg) "/" (amqpUser cfg) (amqpPass cfg)
   chan <- openChannel conn
 
   declareExchange chan newExchange
