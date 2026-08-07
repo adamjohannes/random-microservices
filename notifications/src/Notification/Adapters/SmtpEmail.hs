@@ -6,10 +6,11 @@ module Notification.Adapters.SmtpEmail
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
-import Network.Mail.Mime (Address (..), Mail, simpleMail')
-import Network.Mail.SMTP (sendMail, sendMailWithLoginTLS)
+import Network.HaskellNet.SMTP (doSMTPPort, sendMail)
+import Network.Mail.Mime (Address (..), Mail, renderMail', simpleMail')
 import Notification.Config (SmtpConfig (..))
 import Notification.Domain.Email (EmailMessage (..))
 import Notification.Ports.EmailSender (EmailSender (..))
@@ -30,13 +31,13 @@ instance EmailSender SmtpEmailM where
                  (Address (Just (smtpFromName cfg)) (smtpFromAddr cfg))
                  (emSubject msg)
                  (TL.fromStrict (emBody msg))
-        host = smtpHost cfg
-        user = T.unpack (smtpUser cfg)
-        pass = T.unpack (smtpPass cfg)
-        send = if null user
-                 then sendMail host mail
-                 else sendMailWithLoginTLS host user pass mail
-    result <- liftIO $ try @SomeException send
+        from = T.unpack (smtpFromAddr cfg)
+        to   = [T.unpack (emTo msg)]
+        port = fromIntegral (smtpPort cfg)
+    result <- liftIO $ try @SomeException $ do
+      rendered <- renderMail' mail
+      doSMTPPort (smtpHost cfg) port $ \conn ->
+        sendMail from to (BL.toStrict rendered) conn
     pure $ case result of
       Left err -> Left (show err)
       Right _  -> Right ()

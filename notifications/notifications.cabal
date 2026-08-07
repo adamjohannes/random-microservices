@@ -32,6 +32,7 @@ library
     , Notification.Health
   build-depends:
       amqp >= 0.22
+    , HaskellNet >= 0.6
     , mime-mail >= 0.5
     , smtp-mail >= 0.3
     , servant >= 0.20
