@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
 import Control.Monad (forever)
+import System.IO (hSetBuffering, stdout, stderr, BufferMode(..))
 import Network.Wai.Handler.Warp (run)
 import Servant (Proxy (..), serve)
 
@@ -16,6 +17,8 @@ import Notification.Ports.EmailSender (sendEmail)
 
 main :: IO ()
 main = do
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   cfg <- loadConfig
   _ <- forkIO $ connectWithRetry cfg 1
   let port = appPort cfg
@@ -29,6 +32,7 @@ connectWithRetry cfg attempt = do
       case dispatch evt of
         Nothing  -> putStrLn "no email mapped for event (ignoring)"
         Just msg -> do
+          putStrLn $ "dispatching email to " <> show (emTo msg)
           r <- runSmtpEmailM (appSmtp cfg) (sendEmail msg)
           case r of
             Left err -> putStrLn $ "smtp error: " <> err
