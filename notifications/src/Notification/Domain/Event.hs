@@ -1,6 +1,7 @@
 module Notification.Domain.Event (EventPayload (..)) where
 
-import Data.Aeson (FromJSON (..), ToJSON (..), Parser, object, withObject, (.:), (.=))
+import Data.Aeson (FromJSON (..), ToJSON (..), object, withObject, (.:), (.=))
+import Data.Aeson.Types (Parser)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
