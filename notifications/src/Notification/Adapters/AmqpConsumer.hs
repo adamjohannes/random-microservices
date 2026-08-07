@@ -8,8 +8,8 @@ import Network.AMQP
 import Notification.Config (AmqpConfig (..))
 import Notification.Domain.Event (EventPayload)
 
-exchangeName :: T.Text
-exchangeName = "domain_events"
+domainExchange :: T.Text
+domainExchange = "domain_events"
 
 queueBindings :: [(T.Text, T.Text)]
 queueBindings =
@@ -25,7 +25,7 @@ startConsuming cfg handler = do
   chan <- openChannel conn
 
   declareExchange chan newExchange
-    { exchangeName    = exchangeName
+    { exchangeName    = domainExchange
     , exchangeType    = "topic"
     , exchangeDurable = True
     }
@@ -35,7 +35,7 @@ startConsuming cfg handler = do
       { queueName    = qName
       , queueDurable = True
       }
-    bindQueue chan qName exchangeName routingKey
+    bindQueue chan qName domainExchange routingKey
     _ <- consumeMsgs chan qName Ack $ \(msg, env) -> do
       let body = BL.toStrict (msgBody msg)
       case eitherDecodeStrict body of

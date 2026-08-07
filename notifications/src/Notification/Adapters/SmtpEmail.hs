@@ -6,6 +6,7 @@ module Notification.Adapters.SmtpEmail
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Network.Mail.Mime (Address (..), Mail, plainPart, simpleMail')
 import Network.Mail.SMTP (sendMailWithLoginTLS)
@@ -32,8 +33,8 @@ instance EmailSender SmtpEmailM where
     result <- liftIO $ try @SomeException $
       sendMailWithLoginTLS
         (smtpHost cfg)
-        (smtpUser cfg)
-        (smtpPass cfg)
+        (T.unpack $ smtpUser cfg)
+        (T.unpack $ smtpPass cfg)
         mail
     pure $ case result of
       Left err -> Left (show err)
