@@ -48,14 +48,14 @@ check_docker_compose_v2
 
 # ── environment variable notes ────────────────────────────────────────────────
 info "Checking environment variables…"
-ok "JWT_SECRET and M2M_SECRET use 'change-me-in-production' for local dev (hardcoded in compose files)"
+ok "JWT_SECRET and M2M_SECRET use 'change-me-in-production-dev-key1' for local dev (hardcoded in compose files)"
 warn "Set JWT_SECRET and M2M_SECRET to strong secrets before deploying to production"
 
 # ── warn about hardcoded secrets in compose files ────────────────────────────
 info "Checking for hardcoded secrets in docker-compose files…"
 for f in "$ROOT"/account/docker-compose.yaml "$ROOT"/course/docker-compose.yaml "$ROOT"/connections/docker-compose.yaml; do
-  if grep -q "change-me-in-production" "$f" 2>/dev/null; then
-    warn "$(basename "$(dirname "$f")")/docker-compose.yaml contains JWT_SECRET: change-me-in-production — safe for local dev only"
+  if grep -q "change-me-in-production-dev-key1" "$f" 2>/dev/null; then
+    warn "$(basename "$(dirname "$f")")/docker-compose.yaml contains JWT_SECRET: change-me-in-production-dev-key1 — safe for local dev only"
   fi
 done
 
