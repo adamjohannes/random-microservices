@@ -2,13 +2,14 @@ module Main (main) where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
+import Control.Monad (when)
 import System.IO (BufferMode (..), hPutStrLn, hSetBuffering, stderr, stdout)
 import Network.Wai.Handler.Warp (run)
 import Servant (Proxy (..), serve)
 
 import Notification.Adapters.AmqpConsumer (startConsuming)
 import Notification.Adapters.SmtpEmail (runSmtpEmailM)
-import Notification.Config (AppConfig, appAmqp, appPort, appSmtp, loadConfig)
+import Notification.Config (AppConfig, appAmqp, appAmqpDelaySecs, appPort, appSmtp, loadConfig)
 import Notification.Domain.Dispatch (dispatch)
 import Notification.Domain.Email (emTo)
 import Notification.Health (HealthAPI, healthServer)
@@ -22,6 +23,10 @@ main = do
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   cfg <- loadConfig
+  let delay = appAmqpDelaySecs cfg
+  when (delay > 0) $ do
+    logS $ "waiting " <> show delay <> "s before connecting to AMQP"
+    threadDelay (delay * 1_000_000)
   _ <- forkIO $ connectWithRetry cfg 1
   let port = appPort cfg
   logS $ "notifications service listening on port " <> show port

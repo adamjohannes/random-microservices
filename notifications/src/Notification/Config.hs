@@ -26,9 +26,10 @@ data SmtpConfig = SmtpConfig
   }
 
 data AppConfig = AppConfig
-  { appAmqp :: AmqpConfig
-  , appSmtp :: SmtpConfig
-  , appPort :: Int
+  { appAmqp         :: AmqpConfig
+  , appSmtp         :: SmtpConfig
+  , appPort         :: Int
+  , appAmqpDelaySecs :: Int
   }
 
 loadConfig :: IO AppConfig
@@ -45,11 +46,13 @@ loadConfig = do
   smtpName_ <- T.pack . fromMaybe "Platform Notifications" <$> lookupEnv "SMTP_FROM_NAME"
 
   port_     <- read . fromMaybe "8083" <$> lookupEnv "PORT"
+  delay_    <- read . fromMaybe "0"    <$> lookupEnv "AMQP_STARTUP_DELAY_SECS"
 
   pure AppConfig
-    { appAmqp = AmqpConfig amqpHost_ amqpUser_ amqpPass_
-    , appSmtp = SmtpConfig smtpHost_ smtpPort_ smtpUser_ smtpPass_ smtpFrom_ smtpName_
-    , appPort = port_
+    { appAmqp          = AmqpConfig amqpHost_ amqpUser_ amqpPass_
+    , appSmtp          = SmtpConfig smtpHost_ smtpPort_ smtpUser_ smtpPass_ smtpFrom_ smtpName_
+    , appPort          = port_
+    , appAmqpDelaySecs = delay_
     }
 
 require :: String -> IO String

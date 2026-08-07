@@ -19,7 +19,7 @@ services:
       SMTP_PASS: ""
       SMTP_FROM_ADDRESS: notifications@example.com
       PORT: "8083"
-    entrypoint: ["sh", "-c", "sleep 10 && ./notifications"]
+      AMQP_STARTUP_DELAY_SECS: "10"
     networks:
       - default
       - services_net
