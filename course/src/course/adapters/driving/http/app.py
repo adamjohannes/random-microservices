@@ -8,7 +8,7 @@ from src.course.adapters.driving.http.exception_handlers import (
     not_found_handler,
     resource_state_handler,
 )
-from src.course.adapters.driving.http.dependencies import init_event_publisher
+from src.course.adapters.driving.http.dependencies import init_db, init_event_publisher
 from src.course.adapters.driving.http.routers.courses import router as courses_router
 from src.course.adapters.driving.http.routers.users import router as users_router
 from src.course.config import Config
@@ -23,7 +23,9 @@ from src.course.domain.exceptions import (
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        await init_event_publisher(Config())
+        cfg = Config()
+        init_db(cfg)
+        await init_event_publisher(cfg)
         yield
 
     app = FastAPI(title="Course Service", lifespan=lifespan)
