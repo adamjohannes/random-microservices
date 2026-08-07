@@ -1,6 +1,6 @@
 module Notification.Domain.Event (EventPayload (..)) where
 
-import Data.Aeson (FromJSON (..), ToJSON (..), object, withObject, (.:), (.=))
+import Data.Aeson (FromJSON (..), ToJSON (..), Parser, object, withObject, (.:), (.=))
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
@@ -41,7 +41,7 @@ data EventPayload
 
 instance FromJSON EventPayload where
   parseJSON = withObject "EventPayload" $ \o -> do
-    eventType <- o .: "event_type" :: _ Text
+    eventType <- o .: "event_type" :: Parser Text
     case eventType of
       "account.user_registered" ->
         UserRegistered
