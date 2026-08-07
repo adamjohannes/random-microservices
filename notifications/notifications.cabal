@@ -7,7 +7,7 @@ common shared
   ghc-options:      -Wall -Wunused-imports
   default-language: GHC2021
   build-depends:
-      base ^>=4.18
+      base >= 4.18 && < 4.20
     , aeson >= 2.0
     , text
     , bytestring
