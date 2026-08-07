@@ -17,12 +17,21 @@ from src.course.application.use_cases.user_usecase import UserUseCase
 _engine = None
 _session_factory = None
 _event_publisher: RabbitMQEventPublisher | NoopEventPublisher | None = None
+_config: Config | None = None
 
 
-def _get_session_factory(config: Config) -> async_sessionmaker:
+def _get_config() -> Config:
+    global _config
+    if _config is None:
+        _config = Config()
+    return _config
+
+
+def _get_session_factory() -> async_sessionmaker:
     global _engine, _session_factory
     if _session_factory is None:
-        _engine = create_async_engine(config.database_url)
+        cfg = _get_config()
+        _engine = create_async_engine(cfg.database_url)
         _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
     return _session_factory
 
@@ -41,8 +50,8 @@ async def init_event_publisher(config: Config) -> None:
         _event_publisher = NoopEventPublisher()
 
 
-async def get_course_usecase(config: Config) -> AsyncGenerator[CourseUseCase, None]:
-    factory = _get_session_factory(config)
+async def get_course_usecase() -> AsyncGenerator[CourseUseCase, None]:
+    factory = _get_session_factory()
     async with factory() as session:
         async with session.begin():
             yield CourseUseCase(
@@ -52,8 +61,8 @@ async def get_course_usecase(config: Config) -> AsyncGenerator[CourseUseCase, No
             )
 
 
-async def get_user_usecase(config: Config) -> AsyncGenerator[UserUseCase, None]:
-    factory = _get_session_factory(config)
+async def get_user_usecase() -> AsyncGenerator[UserUseCase, None]:
+    factory = _get_session_factory()
     async with factory() as session:
         async with session.begin():
             yield UserUseCase(user_repo=PostgresUserRepository(session))

@@ -33,6 +33,7 @@ services:
       DATABASE_URL: postgres://user:password@db:5432/account_db?sslmode=disable
       PORT: "8080"
       ENVIRONMENT: production
+      JWT_SECRET: change-me-in-production
       AMQP_HOST: rabbitmq
       AMQP_USER: guest
       AMQP_PASS: guest

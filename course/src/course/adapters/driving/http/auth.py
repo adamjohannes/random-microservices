@@ -7,16 +7,20 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from src.course.config import Config
 
 _bearer = HTTPBearer()
+_config: Config | None = None
 
 
-def get_config() -> Config:
-    return Config()
+def _get_config() -> Config:
+    global _config
+    if _config is None:
+        _config = Config()
+    return _config
 
 
 def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
-    config: Config = Depends(get_config),
 ) -> UUID:
+    config = _get_config()
     token = credentials.credentials
     try:
         payload = jwt.decode(token, config.jwt_secret, algorithms=["HS256"])
