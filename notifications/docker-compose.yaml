@@ -1,15 +1,4 @@
 services:
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   mailhog:
     image: mailhog/mailhog:latest
     ports:
@@ -21,7 +10,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      AMQP_HOST: rabbitmq
+      AMQP_HOST: account-rabbitmq-1
       AMQP_USER: guest
       AMQP_PASS: guest
       SMTP_HOST: mailhog
@@ -30,6 +19,10 @@ services:
       SMTP_PASS: ""
       SMTP_FROM_ADDRESS: notifications@example.com
       PORT: "8083"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    networks:
+      - default
+      - services_net
+
+networks:
+  services_net:
+    external: true

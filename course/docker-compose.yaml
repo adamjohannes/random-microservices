@@ -22,17 +22,6 @@ services:
       db:
         condition: service_healthy
 
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   course:
     build: .
     environment:
@@ -40,7 +29,7 @@ services:
       JWT_SECRET: change-me-in-production-dev-key1
       PORT: "8080"
       ENVIRONMENT: production
-      AMQP_HOST: rabbitmq
+      AMQP_HOST: account-rabbitmq-1
       AMQP_USER: guest
       AMQP_PASS: guest
     ports:
@@ -51,8 +40,6 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      rabbitmq:
-        condition: service_healthy
 
 volumes:
   pgdata:

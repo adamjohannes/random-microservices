@@ -13,17 +13,6 @@ services:
       retries: 10
       start_period: 30s
 
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   connections:
     build: .
     ports:
@@ -34,7 +23,7 @@ services:
       NEO4J_PASSWORD: password
       JWT_SECRET: change-me-in-production-dev-key1
       M2M_SECRET: change-me-in-production-dev-key1
-      AMQP_HOST: rabbitmq
+      AMQP_HOST: account-rabbitmq-1
       AMQP_USER: guest
       AMQP_PASS: guest
     networks:
@@ -42,8 +31,6 @@ services:
       - services_net
     depends_on:
       neo4j:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
 
 networks:
