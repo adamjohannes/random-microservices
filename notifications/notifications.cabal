@@ -44,7 +44,10 @@ executable notifications
   import:          shared
   main-is:         Main.hs
   hs-source-dirs:  app
-  build-depends:   notifications
+  build-depends:
+      notifications
+    , servant-server >= 0.20
+    , warp >= 3.3
 
 test-suite notifications-test
   import:          shared
