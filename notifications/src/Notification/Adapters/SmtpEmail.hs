@@ -9,7 +9,7 @@ import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
-import Network.HaskellNet.SMTP (doSMTPPort, sendMail)
+import Network.HaskellNet.SMTP (doSMTPPort, sendMimeMail2)
 import Network.Mail.Mime (Address (..), Mail, renderMail', simpleMail')
 import Notification.Config (SmtpConfig (..))
 import Notification.Domain.Email (EmailMessage (..))
@@ -31,13 +31,10 @@ instance EmailSender SmtpEmailM where
                  (Address (Just (smtpFromName cfg)) (smtpFromAddr cfg))
                  (emSubject msg)
                  (TL.fromStrict (emBody msg))
-        from = T.unpack (smtpFromAddr cfg)
-        to   = [T.unpack (emTo msg)]
         port = fromIntegral (smtpPort cfg)
-    result <- liftIO $ try @SomeException $ do
-      rendered <- renderMail' mail
+    result <- liftIO $ try @SomeException $
       doSMTPPort (smtpHost cfg) port $ \conn ->
-        sendMail from to (BL.toStrict rendered) conn
+        sendMimeMail2 mail conn
     pure $ case result of
       Left err -> Left (show err)
       Right _  -> Right ()
